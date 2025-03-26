@@ -1,4 +1,4 @@
-import { hash, compare } from "bcrypt";
+import { hash, compare } from "bcryptjs";
 import UserRepository from "../repositories/user.repository.js";
 // import RoleRepository from "../repositories/role.repository.js";
 
