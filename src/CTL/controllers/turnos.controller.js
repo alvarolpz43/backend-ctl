@@ -1,4 +1,4 @@
-import { findAllTurnos, insertTurno, updateTurno } from "../services/turnos.service.js";
+import { findAllTurnos, insertTurno, updateTurno, deleteTurno } from "../services/turnos.service.js";
 
 
 export const getAllTurnos = async (req, res) => {
@@ -34,19 +34,30 @@ export const createTurno = async (req, res) => {
 }
 
 export const editTurno = async (req, res) => {
-
-    const { body, params } = req;
-
     try {
+        const response = await updateTurno(req.params.id, req.body);
+        res.status(response.statusCode || 500).json(response);
+    } catch (error) {
+        console.error("Error en editTurno:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            statusCode: 500
+        });
+    }
+};
 
-        const response = await updateTurno(params.id, body);
+export const deletedTurno = async (req, res) => {
+    const { params } = req;
+    try {
+        const response = await deleteTurno(params.id);
         res.status(200).json(response);
 
     } catch (error) {
-        console.log(error);
         res.status(400).json({
-            message: "Something went wrong in editTurno",
+            message: "Something went wrong in deleteTurno",
             error
-        });
-    };
-};
+        })
+    }
+}

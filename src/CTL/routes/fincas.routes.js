@@ -1,4 +1,4 @@
-import { createFinca, editFinca, getAllFincas } from "../controllers/fincas.controller.js";
+import { createFinca, deletedFinca, editFinca, getAllFincas } from "../controllers/fincas.controller.js";
 
 import { Router } from "express";
 import { registerFinca } from "../schemas/finca.schema.js";
@@ -7,7 +7,8 @@ const routerFinca = Router();
 
 routerFinca.get("/", getAllFincas);
 routerFinca.post("/", validateSchema(registerFinca), createFinca);
-routerFinca.put("edit/:id", editFinca);
+routerFinca.put("/edit/:id", editFinca);
+routerFinca.delete("/:id", deletedFinca);
 
 export default routerFinca;
 

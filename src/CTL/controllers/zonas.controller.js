@@ -1,4 +1,4 @@
-import { findAllZonas, insertZona, updateZona } from "../services/zonas.service.js";
+import { findAllZonas, insertZona, updateZona, deleteZona } from "../services/zonas.service.js";
 
 
 export const getAllZonas = async (req, res) => {
@@ -34,19 +34,30 @@ export const createZona = async (req, res) => {
 }
 
 export const editZona = async (req, res) => {
-
-    const { body, params } = req;
-
     try {
+        const response = await updateZona(req.params.id, req.body);
+        res.status(response.statusCode || 500).json(response);
+    } catch (error) {
+        console.error("Error en editZona:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            statusCode: 500
+        });
+    }
+};
 
-        const response = await updateZona(params.id, body);
+export const deletedZona = async (req, res) => {
+    const { params } = req;
+    try {
+        const response = await deleteZona(params.id);
         res.status(200).json(response);
 
     } catch (error) {
-        console.log(error);
         res.status(400).json({
-            message: "Something went wrong in editZona",
+            message: "Something went wrong in deletedZona",
             error
-        });
-    };
-};
+        })
+    }
+}

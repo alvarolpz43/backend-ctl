@@ -45,50 +45,79 @@ export const insertContratista = async (data) => {
 }
 
 export const updateContratista = async (id, data) => {
+    try {
+        if (!id) {
+            return { success: false, message: "El id de la contratista es requerido" };
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return { success: false, message: "El id de la contratista no es válido" };
+        }
+
+
+        if (data.nombre) {
+            const existente = await contratistaRepository.findContratistaByName(data.nombre);
+            if (existente && existente._id.toString() !== id) {
+                return { success: false, message: "Ya existe una contratista con ese nombre" };
+            }
+        }
+
+        const response = await contratistaRepository.updateContratista(id, data);
+
+        if (response.matchedCount === 0) {
+            return { success: false, message: "Contratista no encontrada" };
+        }
+
+        return {
+            success: true,
+            message: "Contratista actualizada correctamente",
+            data: {
+                matchedCount: response.matchedCount,
+                modifiedCount: response.modifiedCount
+            }
+        };
+
+    } catch (error) {
+        console.error("Error en updateContratista:", error);
+        return {
+            success: false,
+            message: error.message.includes("validation") 
+                   ? "Error de validación: " + error.message
+                   : "Error al actualizar contratista"
+        };
+    }
+};
+
+export const deleteContratista = async (id) => {
+
     if (!id) {
-        return {
-            success: false,
-            message: "El id de la contratista es requerido"
-        }
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return {
-            success: false,
-            message: "El id de la contratista no es valido"
-        }
-    }
-
-    const { nombre, ...demasData } = data;
-
-    let contratistaUpdate = { ...demasData };
-
-    if (nombre) {
-        const contraExist = await contratistaRepository.findContratistaByName(nombre);
-
-        if (contraExist) {
+        if (!id) {
             return {
                 success: false,
-                message: "La contratista ya existe"
-            };
-        };
-    };
+                message: "El id de la contratista es requerido"
+            }
+        }
 
-    const response = await contratistaRepository.updateContratista(
-        id,
-        contratistaUpdate
-    );
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return {
+                success: false,
+                message: "El id de la contratista no es valido"
+            }
+        }
+
+    }
+
+    const response = await contratistaRepository.deleteContratista(id);
 
     if (!response) {
         return {
             success: false,
-            message: "Contratista no encontrada"
+            message: "Contratista no eliminada"
         }
     }
 
     return {
         success: true,
-        message: "Contratista Actualizada"
+        message: "Contratista Eliminada"
     }
-
 }

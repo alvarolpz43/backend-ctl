@@ -15,17 +15,29 @@ const insertFinca = async (data) => {
 }
 
 const updateFinca = async (id, data) => {
-    return await fincaModel.updateOne({ _id: id }, data);
+    return await fincaModel.updateOne(
+        { _id: id },
+        { $set: data }, // Actualización parcial segura
+        { 
+            runValidators: true, // Aplica validaciones del schema
+            context: 'query' // Necesario para algunas validaciones
+        }
+    );
 };
 
 const findFincaByName = async (name) => {
     return await fincaModel.findOne({ nombreFinca: name }); 
 }
 
+const deletedFinca = async (id) => {
+    return await fincaModel.deleteOne({ _id: id });
+};
+
 export default {
     findAllFincas,
     findFincaByName,
     findFincaById,
     insertFinca,
-    updateFinca
+    updateFinca,
+    deletedFinca
 };

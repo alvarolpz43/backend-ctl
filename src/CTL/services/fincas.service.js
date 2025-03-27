@@ -45,51 +45,82 @@ export const insertFincas = async (data) => {
 }
 
 export const updateFinca = async (id, data) => {
+    try {
+        if (!id) {
+            return { success: false, message: "El id de la finca es requerido" };
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return { success: false, message: "El id de la finca no es válido" };
+        }
+
+        // Verificar si el nombre existe en otra finca
+        if (data.nombreFinca) {
+            const fincaExistente = await fincasRepository.findFincaByName(data.nombreFinca);
+            if (fincaExistente && fincaExistente._id.toString() !== id) {
+                return { 
+                    success: false, 
+                    message: "Ya existe una finca con ese nombre",
+                    conflictId: fincaExistente._id
+                };
+            }
+        }
+
+        const response = await fincasRepository.updateFinca(id, data);
+
+        if (response.matchedCount === 0) {
+            return { success: false, message: "Finca no encontrada" };
+        }
+
+        return {
+            success: true,
+            message: "Finca actualizada correctamente",
+            updatedFields: Object.keys(data),
+            modifiedCount: response.modifiedCount
+        };
+
+    } catch (error) {
+        console.error("Error en updateFinca:", error);
+        return {
+            success: false,
+            message: error.message.includes("validation") 
+                   ? `Error de validación: ${error.message}`
+                   : "Error al actualizar finca",
+            errorDetails: process.env.NODE_ENV === 'development' ? error.message : undefined
+        };
+    }
+};
+
+export const deleteFinca = async (id) => {
 
     if (!id) {
-        return {
-            success: false,
-            message: "El id de la finca es requerido"
-        }
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return {
-            success: false,
-            message: "El id de la finca no es valido"
-        }
-    }
-
-    const { nombreFinca, ...demasData } = data;
-
-    let fincaUpdate = { ...demasData };
-
-    if (nombreFinca) {
-        const fincaExist = await fincasRepository.findFincaByName(nombreFinca);
-
-        if (fincaExist) {
+        if (!id) {
             return {
                 success: false,
-                message: "La Finca ya existe"
-            };
-        };
-    };
+                message: "El id de la finca es requerido"
+            }
+        }
 
-    const response = await fincasRepository.updateFinca(
-        id,
-        fincaUpdate
-    );
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return {
+                success: false,
+                message: "El id de la finca no es valido"
+            }
+        }
+
+    }
+
+    const response = await fincasRepository.deletedFinca(id);
 
     if (!response) {
         return {
             success: false,
-            message: "Finca no encontrada"
+            message: "Finca no eliminada"
         }
     }
 
     return {
         success: true,
-        message: "Finca Actualizada"
+        message: "Finca eliminada"
     }
-
 }

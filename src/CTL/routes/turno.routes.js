@@ -1,4 +1,4 @@
-import { createTurno, editTurno, getAllTurnos } from "../controllers/turnos.controller.js";
+import { createTurno, editTurno, getAllTurnos, deletedTurno } from "../controllers/turnos.controller.js";
 
 import { Router } from "express";
 import { registerTurno } from "../schemas/turno.schema.js";
@@ -7,6 +7,8 @@ const routerTurno = Router();
 
 routerTurno.get("/", getAllTurnos);
 routerTurno.post("/", validateSchema(registerTurno), createTurno);
-routerTurno.put("edit/:id", editTurno);
+routerTurno.put("/edit/:id", editTurno);
+routerTurno.put("/:id", deletedTurno);
+
 
 export default routerTurno;

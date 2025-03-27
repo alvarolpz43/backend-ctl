@@ -1,4 +1,4 @@
-import { createZona, editZona, getAllZonas } from "../controllers/zonas.controller.js";
+import { createZona, deletedZona, editZona, getAllZonas } from "../controllers/zonas.controller.js";
 
 import { Router } from "express";
 import { registerZona } from "../schemas/zona.schema.js";
@@ -7,6 +7,8 @@ const routerZona = Router();
 
 routerZona.get("/", getAllZonas);
 routerZona.post("/", validateSchema(registerZona), createZona);
-routerZona.put("edit/:id", editZona);
+routerZona.put("/edit/:id", editZona);
+routerZona.put("/:id", deletedZona);
+
 
 export default routerZona;

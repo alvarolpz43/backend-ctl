@@ -45,51 +45,89 @@ export const insertTurno = async (data) => {
 }
 
 export const updateTurno = async (id, data) => {
+    try {
+        // Validaciones básicas
+        if (!id) {
+            return { success: false, message: "El id del turno es requerido", statusCode: 400 };
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return { success: false, message: "ID de turno no válido", statusCode: 400 };
+        }
+
+        // Verificar nombre duplicado en otros registros
+        if (data.nombreTurno) {
+            const turnoExistente = await turnosRepository.findTurnoByName(data.nombreTurno);
+            if (turnoExistente && turnoExistente._id.toString() !== id) {
+                return { 
+                    success: false, 
+                    message: "Ya existe un turno con ese nombre",
+                    conflictId: turnoExistente._id,
+                    statusCode: 409
+                };
+            }
+        }
+
+        // Actualización segura
+        const response = await turnosRepository.updateTurno(id, data);
+
+        if (response.matchedCount === 0) {
+            return { success: false, message: "Turno no encontrado", statusCode: 404 };
+        }
+
+        return {
+            success: true,
+            message: "Turno actualizado correctamente",
+            modifiedCount: response.modifiedCount,
+            updatedFields: Object.keys(data),
+            statusCode: 200
+        };
+
+    } catch (error) {
+        console.error("Error en updateTurno:", error);
+        return {
+            success: false,
+            message: error.message.includes("validation") 
+                   ? `Error de validación: ${error.message}`
+                   : "Error al actualizar turno",
+            statusCode: error.message.includes("validation") ? 400 : 500,
+            errorDetails: process.env.NODE_ENV === 'development' ? error : undefined
+        };
+    }
+};
+
+
+export const deleteTurno = async (id) => {
 
     if (!id) {
-        return {
-            success: false,
-            message: "El id del turno es requerido"
-        }
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return {
-            success: false,
-            message: "El id del turno no es valido"
-        }
-    }
-
-    const { nombreTurno, ...demasData } = data;
-
-    let turnoUpdate = { ...demasData };
-
-    if (numCedula) {
-        const turnoExist = await turnosRepository.findTurnoByName(nombreTurno);
-
-        if (turnoExist) {
+        if (!id) {
             return {
                 success: false,
-                message: "el turno ya existe"
-            };
-        };
-    };
+                message: "El id del turno es requerido"
+            }
+        }
 
-    const response = await turnosRepository.updateTurno(
-        id,
-        turnoUpdate
-    );
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return {
+                success: false,
+                message: "El id del turno no es valido"
+            }
+        }
+
+    }
+
+    const response = await turnosRepository.deletedTurno(id);
 
     if (!response) {
         return {
             success: false,
-            message: "Turno no encontrado"
+            message: "Turno no eliminado"
         }
     }
 
     return {
         success: true,
-        message: "Turno Actualizado"
+        message: "Turno eliminado"
     }
-
 }
+

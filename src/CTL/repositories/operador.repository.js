@@ -15,17 +15,31 @@ const insertOperador = async (data) => {
 }
 
 const updateOperador = async (id, data) => {
-    return await operadorModel.updateOne({ _id: id }, data);
+    return await operadorModel.updateOne(
+        { _id: id },
+        { $set: data }, // Actualización parcial
+        { 
+            runValidators: true, // Valida contra el schema
+            context: 'query' // Necesario para validar updates
+        }
+    );
 };
 
 const findOperadorByCc = async (cc) => {
     return await operadorModel.findOne({ numCedula: cc });
 }
 
+
+const deletedOperador = async (id) => {
+    return await operadorModel.deleteOne({ _id: id });
+};
+
+
 export default {
     findAllOperadores,
     findOperadorByCc,
     findOperadorById,
     insertOperador,
-    updateOperador
+    updateOperador,
+    deletedOperador
 };

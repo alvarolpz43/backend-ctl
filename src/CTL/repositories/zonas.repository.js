@@ -15,17 +15,29 @@ const insertZona = async (data) => {
 }
 
 const updateZona = async (id, data) => {
-    return await zonaModel.updateOne({ _id: id }, data);
+    return await zonaModel.updateOne(
+        { _id: id },
+        { $set: data }, // Actualización parcial segura
+        {
+            runValidators: true, // Valida contra el schema
+            context: 'query' // Necesario para validaciones en updates
+        }
+    );
 };
 
 const findZonaByName = async (name) => {
     return await zonaModel.findOne({ nombreZona: name });
 }
 
+const deletedZona = async (id) => {
+    return await zonaModel.deleteOne({ _id: id });
+};
+
 export default {
     findAllZonas,
     findZonaByName,
     findZonaById,
     insertZona,
-    updateZona
+    updateZona,
+    deletedZona
 };

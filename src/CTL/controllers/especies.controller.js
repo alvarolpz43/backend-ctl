@@ -1,4 +1,4 @@
-import { findAllEspecies, insertEspecies, updateEspecie } from "../services/especies.service.js";
+import { findAllEspecies, insertEspecies, updateEspecie, deleteEspecie } from "../services/especies.service.js";
 
 
 export const getAllEspecies = async (req, res) => {
@@ -34,19 +34,32 @@ export const createEspecie = async (req, res) => {
 }
 
 export const editEspecie = async (req, res) => {
-
-    const { body, params } = req;
-
     try {
+        const response = await updateEspecie(req.params.id, req.body);
 
-        const response = await updateEspecie(params.id, body);
+        const statusCode = response.success ? 200 : 400;
+        res.status(statusCode).json(response);
+
+    } catch (error) {
+        console.error("Error en editEspecie:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error interno del servidor",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+export const deletedEspecie = async (req, res) => {
+    const { params } = req;
+    try {
+        const response = await deleteEspecie(params.id);
         res.status(200).json(response);
 
     } catch (error) {
-        console.log(error);
         res.status(400).json({
-            message: "Something went wrong in editEspecie",
+            message: "Something went wrong in deletedEspecie",
             error
-        });
-    };
-};
+        })
+    }
+}

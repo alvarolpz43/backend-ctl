@@ -15,17 +15,26 @@ const insertEspecies = async (data) => {
 }
 
 const updateEspecie = async (id, data) => {
-    return await especiesModel.updateOne({ _id: id }, data);
+    return await especiesModel.updateOne(
+        { _id: id },
+        { $set: data }, // Actualización parcial segura
+        { runValidators: true } // Aplica validaciones del schema
+    );
 };
-
 const findEspecieByName = async (name) => {
     return await especiesModel.findOne({ nombreEspecie: name });
 }
+
+const deleteEspecie = async (id) => {
+    return await especiesModel.deleteOne({ _id: id });
+};
+
 
 export default {
     findAllEspecies,
     findEspecieByName,
     findEspeciesById,
     insertEspecies,
-    updateEspecie
+    updateEspecie,
+    deleteEspecie
 };
