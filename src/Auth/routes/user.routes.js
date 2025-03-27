@@ -17,7 +17,7 @@ router.get("/", getAllUsers);
 
 router.post("/verify", verifyToken);
 
-router.post("/", validateSchema(registerUserSchema), registerUsers);
+router.post("register/", validateSchema(registerUserSchema), registerUsers);
 
 // router.get("/:id", authMiddleware, getUserById);
 
