@@ -22,7 +22,7 @@ export const findAllEquipos = async () => {
 
 export const insertEquipos = async (data) => {
 
-    const { nombreEquipo, serieEquipo } = data;
+    const { nombreEquipo, serieEquipo, contratistaId } = data;
 
     const equipoExist = await equipoRepository.findEquipoByName(nombreEquipo);
 
@@ -80,9 +80,9 @@ export const updateEquipo = async (id, data) => {
         console.error("Error en updateEquipo:", error);
         return {
             success: false,
-            message: error.message.includes("validation") 
-                   ? `Error de validación: ${error.message}`
-                   : "Error al actualizar equipo"
+            message: error.message.includes("validation")
+                ? `Error de validación: ${error.message}`
+                : "Error al actualizar equipo"
         };
     }
 };

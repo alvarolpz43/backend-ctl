@@ -20,7 +20,7 @@ export const findAllOperadores = async () => {
 
 export const insertOperador = async (data) => {
 
-    const { numCedula, nameOperador, contratistaId } = data;
+    const { numCedula, nameOperador, equipoId } = data;
 
     const operadorExist = await operadoresRepository.findOperadorByCc(numCedula);
 

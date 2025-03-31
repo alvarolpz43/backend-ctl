@@ -9,9 +9,9 @@ const OperadorSchema = new Schema({
         type: String,
         require: true
     },
-    contratistaId: {
+    equipoId: {
         type: Schema.Types.ObjectId,
-        ref: "contratistas",
+        ref: "equipos",
         require: true
     }
 });

@@ -11,6 +11,11 @@ const TurnoSchema = new Schema({
     },
     horaFin: {
         type: Date,
+    },
+    contratistaId: {
+        type: Schema.Types.ObjectId,
+        ref: "contratistas",
+        require: true
     }
 });
 

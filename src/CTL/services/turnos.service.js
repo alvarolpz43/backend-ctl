@@ -20,7 +20,7 @@ export const findAllTurnos = async () => {
 
 export const insertTurno = async (data) => {
 
-    const { nombreTurno, horaInicio, horaFin } = data;
+    const { nombreTurno, horaInicio, horaFin, contratistaId } = data;
 
     const turnoExist = await turnosRepository.findTurnoByName(nombreTurno);
 

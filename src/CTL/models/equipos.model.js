@@ -8,6 +8,11 @@ const EquipoSchema = new Schema({
     serieEquipo: {
         type: String,
         require: true
+    },
+    contratistaId: {
+        type: Schema.Types.ObjectId,
+        ref: "contratistas",
+        require: true
     }
 });
 
