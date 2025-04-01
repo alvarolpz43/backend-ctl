@@ -20,7 +20,7 @@ export const findAllContratistas = async () => {
 
 export const insertContratista = async (data) => {
 
-    const { nombre } = data;
+    const { nombre, estado } = data;
 
     const contratistaExist = await contratistaRepository.findContratistaByName(nombre);
 
@@ -81,9 +81,9 @@ export const updateContratista = async (id, data) => {
         console.error("Error en updateContratista:", error);
         return {
             success: false,
-            message: error.message.includes("validation") 
-                   ? "Error de validación: " + error.message
-                   : "Error al actualizar contratista"
+            message: error.message.includes("validation")
+                ? "Error de validación: " + error.message
+                : "Error al actualizar contratista"
         };
     }
 };

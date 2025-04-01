@@ -7,8 +7,47 @@ const findContratistaById = async (id) => {
 
 
 const findAllContratistas = async () => {
-    return await contratistasModel.find();
-}
+    return await contratistasModel.aggregate([
+        {
+            $lookup: {
+                from: "equipos",
+                localField: "_id",
+                foreignField: "contratistaId",
+                as: "equipos"
+            }
+        },
+        {
+            $lookup: {
+                from: "operadores",
+                localField: "equipos._id",
+                foreignField: "equipoId",
+                as: "operadores"
+            }
+        },
+        {
+            $lookup: {
+                from: "turnos",
+                localField: "_id",
+                foreignField: "contratistaId",
+                as: "turnos"
+            }
+        },
+        {
+            $addFields: {
+                totalEquipos: { $size: "$equipos" },
+                totalTurnos: { $size: "$turnos" },
+                totalOperadores: { $size: "$operadores" }
+            }
+        },
+        {
+            $project: {
+                equipos: 0,
+                turnos: 0,
+                operadores: 0
+            }
+        }
+    ]);
+};
 
 const insertContratista = async (data) => {
     const newContratista = new contratistasModel(data);

@@ -1,9 +1,10 @@
+import zonasModel from "../models/zonas.model.js";
 import nucleosRepository from "../repositories/nucleos.repository.js";
 
 
 export const findAllNucleos = async () => {
 
-    const nucleos = await nucleosRepository.findAllNucleosL();
+    const nucleos = await nucleosRepository.findAllNucleos();
 
     if (!nucleos) {
         return {
@@ -19,34 +20,57 @@ export const findAllNucleos = async () => {
 };
 
 export const insertNucleos = async (data) => {
-
     const { codeNucleo, nombreNucleo, zonaId } = data;
+    
+    try {
+        const zonaExist = await zonasModel.findById(zonaId);
+        if (!zonaExist) {
+            return {
+                success: false,
+                message: "La zona especificada no existe",
+                errorCode: "ZONA_NOT_FOUND"
+            };
+        }
 
-    const nucleoExist = await nucleosRepository.findNucleoByName(nombreNucleo);
+        const nucleoByName = await nucleosRepository.findNucleoByName(nombreNucleo);
+        const nucleoByCode = await nucleosRepository.findNucleoByCode(codeNucleo);
 
-    if (nucleoExist) {
+        if (nucleoByName) {
+            return {
+                success: false,
+                message: "El núcleo ya existe",
+                details: {
+                    existsByName: !!nucleoByName                },
+                errorCode: "NUCLEO_ALREADY_EXISTS"
+            };
+        }
+
+        const nucleoBody = {
+            ...data,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const newNucleo = await nucleosRepository.insertNucleo(nucleoBody);
+
+        return {
+            success: true,
+            message: "Núcleo registrado exitosamente",
+            data: newNucleo
+        };
+
+    } catch (error) {
+        console.error("Error en insertNucleos:", error);
         return {
             success: false,
-            message: "el nucleo ya existe"
-        }
+            message: "Error al registrar el núcleo",
+            error: error.message,
+            errorCode: "INTERNAL_SERVER_ERROR"
+        };
     }
-    l
-    const nucleoBody = {
-        ...data
-    }
-
-    await nucleosRepository.insertNucleo(nucleoBody);
-
-    return {
-        success: true,
-        message: "Nucleo Registrado"
-    }
-
-}
-
+};
 export const updateNucleo = async (id, data) => {
     try {
-        // Validaciones básicas
         if (!id) {
             return { success: false, message: "El id del núcleo es requerido", statusCode: 400 };
         }
@@ -55,7 +79,6 @@ export const updateNucleo = async (id, data) => {
             return { success: false, message: "ID de núcleo no válido", statusCode: 400 };
         }
 
-        // Verificar nombre duplicado en otros registros
         if (data.nombreNucleo) {
             const nucleoExistente = await nucleosRepository.findNucleoByName(data.nombreNucleo);
             if (nucleoExistente && nucleoExistente._id.toString() !== id) {
@@ -68,7 +91,6 @@ export const updateNucleo = async (id, data) => {
             }
         }
 
-        // Actualización segura
         const response = await nucleosRepository.updateNucleo(id, data);
 
         if (response.matchedCount === 0) {

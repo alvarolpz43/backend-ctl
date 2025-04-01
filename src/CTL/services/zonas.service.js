@@ -30,12 +30,12 @@ export const insertZona = async (data) => {
             message: "la zona ya existe"
         }
     }
-    l
+    
     const zonaBody = {
         ...data
     }
 
-    await zonasRepository.insertNucleo(zonaBody);
+    await zonasRepository.insertZona(zonaBody);
 
     return {
         success: true,

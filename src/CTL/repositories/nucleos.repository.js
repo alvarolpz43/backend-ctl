@@ -17,10 +17,10 @@ const insertNucleo = async (data) => {
 const updateNucleo = async (id, data) => {
     return await nucleoModel.updateOne(
         { _id: id },
-        { $set: data }, // Actualización parcial
+        { $set: data }, 
         {
-            runValidators: true, // Valida contra el schema
-            context: 'query' // Necesario para validar updates
+            runValidators: true, 
+            context: 'query' 
         }
     );
 };
@@ -31,7 +31,11 @@ const deletedNucleo = async (id) => {
 
 
 const findNucleoByName = async (name) => {
-    return await nucleoModel.findOne({ nombreZona: name });
+    return await nucleoModel.findOne({ nombreNucleo: name });
+}
+
+const findNucleoByCode = async (code) => {
+    return await nucleoModel.findOne({ codeNucleo: code })
 }
 
 export default {
@@ -40,5 +44,6 @@ export default {
     findNucleoById,
     insertNucleo,
     updateNucleo,
-    deletedNucleo
+    deletedNucleo,
+    findNucleoByCode
 };

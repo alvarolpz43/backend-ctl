@@ -8,7 +8,7 @@ const ContratistaSchema = new Schema({
     },
     estado: {
         type: Boolean,
-        defaul: false
+        default: false
     }
 });
 

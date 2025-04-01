@@ -14,19 +14,45 @@ const insertFinca = async (data) => {
     return newFinca.save();
 }
 
+
+
+const insertMultipleFincas = async (fincasArray) => {
+    try {
+        if (!Array.isArray(fincasArray)) {
+            throw new Error('Se esperaba un array de fincas');
+        }
+
+        const result = await fincaModel.insertMany(fincasArray, {
+            ordered: false 
+        });
+
+        return {
+            insertedCount: result.length,
+            insertedIds: result.map(doc => doc._id)
+        };
+    } catch (error) {
+        console.error('Error en insertMultipleFincas:', error);
+        throw error;
+    }
+};
+
+
+
+
+
 const updateFinca = async (id, data) => {
     return await fincaModel.updateOne(
         { _id: id },
-        { $set: data }, // Actualización parcial segura
-        { 
-            runValidators: true, // Aplica validaciones del schema
-            context: 'query' // Necesario para algunas validaciones
+        { $set: data }, 
+        {
+            runValidators: true, 
+            context: 'query' 
         }
     );
 };
 
 const findFincaByName = async (name) => {
-    return await fincaModel.findOne({ nombreFinca: name }); 
+    return await fincaModel.findOne({ nombreFinca: name });
 }
 
 const deletedFinca = async (id) => {
@@ -39,5 +65,6 @@ export default {
     findFincaById,
     insertFinca,
     updateFinca,
-    deletedFinca
+    deletedFinca,
+    insertMultipleFincas
 };
