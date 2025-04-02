@@ -6,7 +6,14 @@ const findOperadorById = async (id) => {
 
 
 const findAllOperadores = async () => {
-    return await operadorModel.find();
+    return await operadorModel.find()
+        .populate({
+            path: 'equipoId',  
+            populate: {
+                path: 'contratistaId',  
+                model: 'contratistas'  
+            }
+        });
 }
 
 const insertOperador = async (data) => {
