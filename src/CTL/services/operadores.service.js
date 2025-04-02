@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import operadoresRepository from "../repositories/operador.repository.js";
 
 
