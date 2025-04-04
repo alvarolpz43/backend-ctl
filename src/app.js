@@ -40,7 +40,7 @@ app.set("port", process.env.PORT || 3000);
 
 app.use("*", (req, res, next) => {
     res.status(404).json({
-        message: "CTL EndPont Not Found",
+        message: "CTL EndPoint Not Found",
     });
 });
 
