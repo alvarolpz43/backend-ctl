@@ -8,7 +8,7 @@ const routerTurno = Router();
 routerTurno.get("/", getAllTurnos);
 routerTurno.post("/", validateSchema(registerTurno), createTurno);
 routerTurno.put("/edit/:id", editTurno);
-routerTurno.put("/:id", deletedTurno);
+routerTurno.delete("/:id", deletedTurno);
 
 
 export default routerTurno;
