@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import fincasRepository from "../repositories/fincas.repository.js";
 
 

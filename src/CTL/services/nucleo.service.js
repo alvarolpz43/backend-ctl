@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import zonasModel from "../models/zonas.model.js";
 import nucleosRepository from "../repositories/nucleos.repository.js";
 

@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import turnosRepository from "../repositories/turnos.repository.js";
+
 
 
 export const findAllTurnos = async () => {
@@ -30,7 +32,7 @@ export const insertTurno = async (data) => {
             message: "el turno ya existe"
         }
     }
-    
+
     const turnoBody = {
         ...data
     }
@@ -59,8 +61,8 @@ export const updateTurno = async (id, data) => {
         if (data.nombreTurno) {
             const turnoExistente = await turnosRepository.findTurnoByName(data.nombreTurno);
             if (turnoExistente && turnoExistente._id.toString() !== id) {
-                return { 
-                    success: false, 
+                return {
+                    success: false,
                     message: "Ya existe un turno con ese nombre",
                     conflictId: turnoExistente._id,
                     statusCode: 409
@@ -87,9 +89,9 @@ export const updateTurno = async (id, data) => {
         console.error("Error en updateTurno:", error);
         return {
             success: false,
-            message: error.message.includes("validation") 
-                   ? `Error de validación: ${error.message}`
-                   : "Error al actualizar turno",
+            message: error.message.includes("validation")
+                ? `Error de validación: ${error.message}`
+                : "Error al actualizar turno",
             statusCode: error.message.includes("validation") ? 400 : 500,
             errorDetails: process.env.NODE_ENV === 'development' ? error : undefined
         };

@@ -1,5 +1,5 @@
+import mongoose from "mongoose";
 import zonasRepository from "../repositories/zonas.repository.js";
-
 
 export const findAllZonas = async () => {
 
