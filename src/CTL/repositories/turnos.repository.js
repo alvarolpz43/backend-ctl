@@ -6,7 +6,12 @@ const findTurnoById = async (id) => {
 
 
 const findAllTurnos = async () => {
-    return await turnosModel.find().populate('contratista', 'nombre');
+    return await turnosModel.find().populate(
+        {
+            path: "contratistaId",
+            select: "nombre" // Solo trae el campo nombre de la contratista
+        }
+    );
 }
 
 const insertTurno = async (data) => {
