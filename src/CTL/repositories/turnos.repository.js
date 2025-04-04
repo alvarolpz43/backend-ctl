@@ -6,7 +6,7 @@ const findTurnoById = async (id) => {
 
 
 const findAllTurnos = async () => {
-    return await turnosModel.find();
+    return await turnosModel.find().populate('contratista', 'nombre');
 }
 
 const insertTurno = async (data) => {
