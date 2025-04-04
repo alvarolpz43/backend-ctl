@@ -6,11 +6,11 @@ const TurnoSchema = new Schema({
         require: true
     },
     horaInicio: {
-        type: Date,
+        type: String,
 
     },
     horaFin: {
-        type: Date,
+        type: String,
     },
     contratistaId: {
         type: Schema.Types.ObjectId,
