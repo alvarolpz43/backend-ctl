@@ -30,7 +30,7 @@ export const insertTurno = async (data) => {
             message: "el turno ya existe"
         }
     }
-    l
+    
     const turnoBody = {
         ...data
     }
