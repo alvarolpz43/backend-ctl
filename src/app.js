@@ -16,7 +16,8 @@ app.use(express.json());
 app.use(morgan("dev"));
 const allowedOrigins = [
     "http://localhost:5173",
-    "http://localhost:5174"
+    "http://localhost:5174",
+    "https://ctl-frontend.vercel.app"
 ]
 
 app.use(
