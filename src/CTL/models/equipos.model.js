@@ -9,6 +9,10 @@ const EquipoSchema = new Schema({
         type: String,
         require: true
     },
+    tipoEquipo: {
+        type: String,
+        enum: ["Harvester", "Forwarder"]
+    },
     contratistaId: {
         type: Schema.Types.ObjectId,
         ref: "contratistas",
