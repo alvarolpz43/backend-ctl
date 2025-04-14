@@ -25,6 +25,9 @@ const updateEquipo = async (id, data) => {
 const findEquipoByName = async (name) => {
     return await equiposModel.findOne({ nombreEquipo: name });
 }
+const findEquipoBySerie = async (serie) => {
+    return await equiposModel.findOne({ serieEquipo: serie })
+}
 
 
 const deleteEquipo = async (id) => {
@@ -37,5 +40,6 @@ export default {
     findEquiposById,
     insertEquipos,
     updateEquipo,
-    deleteEquipo
+    deleteEquipo,
+    findEquipoBySerie
 };

@@ -24,7 +24,7 @@ export const insertEquipos = async (data) => {
 
     const { nombreEquipo, serieEquipo, contratistaId } = data;
 
-    const equipoExist = await equipoRepository.findEquipoByName(nombreEquipo);
+    const equipoExist = await equipoRepository.findEquipoBySerie(serieEquipo);
 
     if (equipoExist) {
         return {
