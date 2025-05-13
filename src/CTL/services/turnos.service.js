@@ -22,41 +22,28 @@ export const findAllTurnos = async () => {
 
 export const insertTurno = async (data) => {
 
-    try {
-        const { nombreTurno, horaInicio, horaFin, contratistaId } = data;
 
-        const turnoExist = await turnosRepository.findTurnoByNombreYContratista(nombreTurno, contratistaId);
+    const { nombreTurno, horaInicio, horaFin, contratistaId } = data;
+
+    const turnoExist = await turnosRepository.findTurnoByNombreYContratista(nombreTurno, contratistaId);
 
 
-        if (turnoExist) {
-            const error = new Error("El turno ya existe en esta contratista");
-            error.statusCode = 400;
-            throw error;
-        }
-
-        const turnoBody = {
-            ...data
-        }
-
-        await turnosRepository.insertTurno(turnoBody);
-
-        return {
-            success: true,
-            message: "Turno Registrado"
-        }
-    } catch (error) {
-        console.error("Error en createTurno:", error);
-        return {
-            success: false,
-            message: error.message.includes("validation")
-                ? `Error de validación: ${error.message}`
-                : "Error al crear turno",
-            statusCode: error.message.includes("validation") ? 400 : 500,
-            errorDetails: process.env.NODE_ENV === 'development' ? error : undefined
-        };
+    if (turnoExist) {
+        const error = new Error("El turno ya existe en esta contratista");
+        error.statusCode = 400;
+        throw error;
     }
 
+    const turnoBody = {
+        ...data
+    }
 
+    await turnosRepository.insertTurno(turnoBody);
+
+    return {
+        success: true,
+        message: "Turno Registrado"
+    }
 
 }
 
