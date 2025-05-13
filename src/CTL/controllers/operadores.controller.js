@@ -1,4 +1,4 @@
-import { updateOperador, findAllOperadores, insertOperador, deleteOperador } from "../services/operadores.service.js";
+import { updateOperador, findAllOperadores, insertOperador, deleteOperador, insertOperadorMasivo } from "../services/operadores.service.js";
 
 
 export const getAllOperadores = async (req, res) => {
@@ -32,6 +32,33 @@ export const createOperador = async (req, res) => {
         })
     }
 }
+
+export const createOperadoresMasivo = async (req, res) => {
+    const operadores = req.body;
+
+    try {
+        const response = await insertOperadorMasivo(operadores);
+
+        if (!response.success) {
+            return res
+                .status(400)
+                .setHeader("X-Error-Message", response.message)
+                .json(response);
+        }
+
+        res.status(200).json(response);
+    } catch (error) {
+        console.error("Error en createOperadoresMasivo:", error);
+        res
+            .status(500)
+            .setHeader("X-Error-Message", error.message || "Error inesperado")
+            .json({
+                message: "Error al hacer insert masivo de operadores",
+                error: error.message
+            });
+    }
+};
+
 
 export const editOperador = async (req, res) => {
     try {
