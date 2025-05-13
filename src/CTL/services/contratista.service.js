@@ -18,6 +18,22 @@ export const findAllContratistas = async () => {
     };
 };
 
+export const findByIdContratista = async (id) => {
+    const contratistas = await contratistaRepository.findContratistaById(id);
+
+    if (!contratistas) {
+        return {
+            success: false,
+            message: "No hay Contratistas Registradas con este id"
+        };
+    }
+
+    return {
+        success: true,
+        data: contratistas
+    };
+};
+
 export const insertContratista = async (data) => {
 
     const { nombre, estado } = data;

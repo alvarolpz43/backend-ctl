@@ -1,4 +1,4 @@
-import { findAllContratistas, insertContratista, updateContratista, deleteContratista } from "../services/contratista.service.js";
+import { findAllContratistas, insertContratista, updateContratista, deleteContratista, findByIdContratista } from "../services/contratista.service.js";
 
 
 export const getAllContratistas = async (req, res) => {
@@ -19,6 +19,31 @@ export const getAllContratistas = async (req, res) => {
 
 };
 
+export const getContratistaById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            res.status(400).json({
+                message: "La contratista no existe",
+            }
+            )
+        }
+
+        const response = await findByIdContratista(id);
+        return res.status(200).json(response);
+
+
+
+    } catch (e) {
+        console.log(e);
+        res.status(400).json({
+            message: "Something went wrong in getByIdContratista",
+            e
+        })
+    }
+}
+
 export const postContratista = async (req, res) => {
     const { body } = req;
 
@@ -37,11 +62,11 @@ export const postContratista = async (req, res) => {
 export const editContratista = async (req, res) => {
     try {
         const response = await updateContratista(req.params.id, req.body);
-        
+
         if (!response.success) {
             return res.status(400).json(response);
         }
-        
+
         res.status(200).json(response);
     } catch (error) {
         console.error("Error en editContratista:", error);
