@@ -5,6 +5,7 @@ const findTurnoById = async (id) => {
 }
 
 
+
 const findAllTurnos = async () => {
     return await turnosModel.find().populate(
         {
@@ -14,9 +15,10 @@ const findAllTurnos = async () => {
     );
 }
 
-const nombreTurnoExiste = async (id) => {
-    return await turnosModel.findOne({ contratistaId: id })
+const findTurnoByNombreYContratista = async (nombreTurno, contratistaId) => {
+    return await turnosModel.findOne({ nombreTurno, contratistaId });
 }
+
 
 const insertTurno = async (data) => {
     const newTurno = new turnosModel(data);
@@ -49,6 +51,6 @@ export default {
     insertTurno,
     updateTurno,
     deletedTurno,
-    nombreTurnoExiste
+    findTurnoByNombreYContratista
 };
 
