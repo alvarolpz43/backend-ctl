@@ -14,6 +14,10 @@ const findAllTurnos = async () => {
     );
 }
 
+const nombreTurnoExiste = async (id) => {
+    return await turnosModel.findOne({ contratistaId: id })
+}
+
 const insertTurno = async (data) => {
     const newTurno = new turnosModel(data);
     return newTurno.save();
@@ -23,7 +27,7 @@ const updateTurno = async (id, data) => {
     return await turnosModel.updateOne(
         { _id: id },
         { $set: data }, // Actualización parcial
-        { 
+        {
             runValidators: true, // Valida contra el schema
             context: 'query' // Necesario para validar updates
         }
@@ -44,6 +48,7 @@ export default {
     findTurnoById,
     insertTurno,
     updateTurno,
-    deletedTurno
+    deletedTurno,
+    nombreTurnoExiste
 };
 
