@@ -29,11 +29,12 @@ export const insertMasiveFincas = async (dataArray) => {
             };
         }
 
-        const invalidFincas = dataArray.filter(item => 
+        const invalidFincas = dataArray.filter(item =>
             !item?.nombreFinca || !item?.codeFinca || !item?.nucleoId
         );
 
         if (invalidFincas.length > 0) {
+            console.warn("Fincas con campos faltantes:", invalidFincas);
             return {
                 success: false,
                 message: "Algunas fincas no tienen los campos requeridos",
@@ -42,6 +43,8 @@ export const insertMasiveFincas = async (dataArray) => {
                 errorCode: "MISSING_REQUIRED_FIELDS"
             };
         }
+
+        console.log("Total fincas a insertar:", dataArray.length);
 
         const result = await fincasRepository.insertMultipleFincas(dataArray);
 
@@ -54,7 +57,7 @@ export const insertMasiveFincas = async (dataArray) => {
 
     } catch (error) {
         console.error("Error en insertMasiveFincas:", error);
-        
+
         if (error.name === 'BulkWriteError') {
             const insertedCount = error.result?.nInserted || 0;
             const duplicates = error.writeErrors?.map(err => ({
@@ -62,6 +65,8 @@ export const insertMasiveFincas = async (dataArray) => {
                 code: err.code,
                 message: err.errmsg
             })) || [];
+
+            console.warn("Fincas no insertadas por duplicados:", duplicates);
 
             return {
                 success: false,
@@ -80,6 +85,7 @@ export const insertMasiveFincas = async (dataArray) => {
         };
     }
 };
+
 
 export const insertFincas = async (data) => {
 
