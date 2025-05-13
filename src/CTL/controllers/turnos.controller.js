@@ -17,21 +17,22 @@ export const getAllTurnos = async (req, res) => {
 };
 
 export const createTurno = async (req, res) => {
+  const { body } = req;
 
-    const { body } = req;
-    try {
-
-        const response = await insertTurno(body);
-        res.status(200).json(response);
-
-    } catch (error) {
-        console.log(error);
-        res.status(400).json({
-            message: "Something went wrong in createTurno",
-            error
-        })
-    }
-}
+  try {
+    const response = await insertTurno(body);
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(error.statusCode || 400)
+      .setHeader("X-Error-Message", error.message || "Error en createTurno")
+      .json({
+        message: "Something went wrong in createTurno",
+        error: error.message,
+      });
+  }
+};
 
 export const editTurno = async (req, res) => {
     try {
