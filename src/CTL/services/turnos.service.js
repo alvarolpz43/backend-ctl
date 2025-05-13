@@ -24,14 +24,7 @@ export const insertTurno = async (data) => {
 
     const { nombreTurno, horaInicio, horaFin, contratistaId } = data;
 
-    const turnoExist = await turnosRepository.findTurnoByName(nombreTurno);
-
-    if (turnoExist) {
-        return {
-            success: false,
-            message: "el turno ya existe"
-        }
-    }
+   
 
     const turnoBody = {
         ...data
