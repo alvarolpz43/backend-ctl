@@ -28,11 +28,9 @@ export const insertTurno = async (data) => {
 
 
     if (turnoExist) {
-        return {
-            success: false,
-            message: "el turno ya existe en esta contratista",
-            statusCode: 400
-        }
+        const error = new Error("El turno ya existe en esta contratista");
+        error.statusCode = 400;
+        throw error;
     }
 
     const turnoBody = {
@@ -50,7 +48,6 @@ export const insertTurno = async (data) => {
 
 export const updateTurno = async (id, data) => {
     try {
-        // Validaciones básicas
         if (!id) {
             return { success: false, message: "El id del turno es requerido", statusCode: 400 };
         }
@@ -59,7 +56,6 @@ export const updateTurno = async (id, data) => {
             return { success: false, message: "ID de turno no válido", statusCode: 400 };
         }
 
-        // Verificar nombre duplicado en otros registros
         if (data.nombreTurno) {
             const turnoExistente = await turnosRepository.findTurnoByName(data.nombreTurno);
             if (turnoExistente && turnoExistente._id.toString() !== id) {
@@ -72,7 +68,6 @@ export const updateTurno = async (id, data) => {
             }
         }
 
-        // Actualización segura
         const response = await turnosRepository.updateTurno(id, data);
 
         if (response.matchedCount === 0) {
