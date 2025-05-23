@@ -1,5 +1,7 @@
 
 import contratistasModel from "../models/contratistas.model.js";
+import equiposModel from "../models/equipos.model.js";
+import turnosModel from "../models/turnos.model.js";
 
 const findContratistaById = async (id) => {
     return await contratistasModel.findById(id);
@@ -66,6 +68,8 @@ const findContratistaByName = async (name) => {
     return await contratistasModel.findOne({ nombre: name });
 }
 const deleteContratista = async (id) => {
+    await turnosModel.deleteMany({ contratistaId: id });
+    await equiposModel.deleteMany({ contratistaId: id });
     return await contratistasModel.deleteOne({ _id: id });
 };
 

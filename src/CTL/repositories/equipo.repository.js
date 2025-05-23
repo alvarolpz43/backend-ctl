@@ -1,4 +1,5 @@
 import equiposModel from "../models/equipos.model.js";
+import operadorModel from "../models/operador.model.js";
 
 const findEquiposById = async (id) => {
     return await equiposModel.findById(id);
@@ -31,6 +32,7 @@ const findEquipoBySerie = async (serie) => {
 
 
 const deleteEquipo = async (id) => {
+    await operadorModel.deleteMany({ equipoId: id });
     return await equiposModel.deleteOne({ _id: id });
 };
 
