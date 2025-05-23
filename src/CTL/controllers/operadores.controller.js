@@ -26,10 +26,13 @@ export const createOperador = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        res.status(400).json({
-            message: "Something went wrong in createOperador",
-            error
-        })
+        res
+            .status(500)
+            .setHeader("X-Error-Message", error.message || "Error inesperado")
+            .json({
+                message: "Error al hacer insert de operador",
+                error: error.message
+            });
     }
 }
 

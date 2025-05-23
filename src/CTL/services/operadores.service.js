@@ -78,10 +78,9 @@ export const insertOperador = async (data) => {
     const operadorExist = await operadoresRepository.findOperadorByCc(numCedula);
 
     if (operadorExist) {
-        return {
-            success: false,
-            message: "el operador ya existe"
-        }
+        const error = new Error("El operador ya existe");
+        error.statusCode = 400;
+        throw error;
     }
 
     const operadorBody = {
