@@ -56,10 +56,10 @@ export const updateEquipo = async (id, data) => {
         }
 
         // Verificar si el nombre ya existe en OTRO equipo
-        if (data.nombreEquipo) {
-            const equipoExistente = await equipoRepository.findEquipoByName(data.nombreEquipo);
+        if (data.serieEquipo) {
+            const equipoExistente = await equipoRepository.findEquipoBySerie(data.serieEquipo);
             if (equipoExistente && equipoExistente._id.toString() !== id) {
-                return { success: false, message: "Ya existe un equipo con ese nombre" };
+                return { success: false, message: "Ya existe un equipo con esa serie" };
             }
         }
 

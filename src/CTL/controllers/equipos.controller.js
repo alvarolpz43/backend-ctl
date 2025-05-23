@@ -43,11 +43,12 @@ export const editEquipo = async (req, res) => {
 
     } catch (error) {
         console.error("Error en editEquipo:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error interno del servidor",
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        res.status(500).setHeader("X-Error-Message", error.message || "Error inesperado")
+            .json({
+                success: false,
+                message: "Error interno del servidor",
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
     }
 };
 
@@ -58,9 +59,10 @@ export const deletedEquipo = async (req, res) => {
         res.status(200).json(response);
 
     } catch (error) {
-        res.status(400).json({
-            message: "Something went wrong in deleteEquipo",
-            error
-        })
+        res.status(400).setHeader("X-Error-Message", error.message || "Error inesperado")
+            .json({
+                message: "Something went wrong in deleteEquipo",
+                error
+            })
     }
 }
