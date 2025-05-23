@@ -27,10 +27,9 @@ export const insertEquipos = async (data) => {
     const equipoExist = await equipoRepository.findEquipoBySerie(serieEquipo);
 
     if (equipoExist) {
-        return {
-            success: false,
-            message: "El equipo ya existe"
-        }
+        const error = new Error("El equipo ya existe ");
+        error.statusCode = 400;
+        throw error;
     }
 
     const equipoBody = {

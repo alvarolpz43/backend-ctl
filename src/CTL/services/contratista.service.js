@@ -41,10 +41,9 @@ export const insertContratista = async (data) => {
     const contratistaExist = await contratistaRepository.findContratistaByName(nombre);
 
     if (contratistaExist) {
-        return {
-            success: false,
-            massage: "La contratista ya existe"
-        };
+        const error = new Error("la Contratista ya existe");
+        error.statusCode = 400;
+        throw error;
     }
 
     const contratistaBody = {

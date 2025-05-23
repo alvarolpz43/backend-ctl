@@ -52,12 +52,15 @@ export const postContratista = async (req, res) => {
         res.status(200).json(response);
     } catch (error) {
         console.log(error);
-        res.status(400).json({
-            message: "Something went wrong in postContratista",
-            error
-        });
-    };
-};
+        res
+            .status(500)
+            .setHeader("X-Error-Message", error.message || "Error inesperado")
+            .json({
+                message: "Error al hacer insert de contratista",
+                error: error.message
+            });
+    }
+}
 
 export const editContratista = async (req, res) => {
     try {
