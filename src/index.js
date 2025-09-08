@@ -3,7 +3,7 @@ import { connectDb } from "./database/db.js";
 
 
 
-// connectDb();
+connectDb();
 
 app.listen(app.get("port"), () => {
     console.log(`Server on port `, app.get("port"))
