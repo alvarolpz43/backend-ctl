@@ -27,10 +27,9 @@ export const insertEspecies = async (data) => {
     const especieExist = await especieRepository.findEspecieByName(nombreEspecie);
 
     if (especieExist) {
-        return {
-            success: false,
-            message: "la especie ya existe"
-        }
+        const error = new Error("La especie ya existe"); 
+        error.statusCode = 400;
+        throw error;
     }
 
     const especieBody = {

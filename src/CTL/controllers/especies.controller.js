@@ -26,10 +26,13 @@ export const createEspecie = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        res.status(400).json({
-            message: "Something went wrong in createEspecie",
-            error
-        })
+        res
+            .status(500)
+            .setHeader("X-Error-Message", error.message || "Error inesperado")
+            .json({
+                message: "Error al hacer insert de especie ",
+                error: error.message
+            });
     }
 }
 
@@ -42,11 +45,12 @@ export const editEspecie = async (req, res) => {
 
     } catch (error) {
         console.error("Error en editEspecie:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error interno del servidor",
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        res.status(500).setHeader("X-Error-Message", error.message || "Error inesperado")
+            .json({
+                success: false,
+                message: "Error interno del servidor",
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
     }
 };
 
