@@ -4,7 +4,11 @@ const RespuestaCampoSchema = new Schema({
     campoId: { type: String, required: true },
     label: { type: String, default: "" },
     tipo: { type: String, default: "text" },
-    valor: { type: Schema.Types.Mixed, default: null }
+    valor: { type: Schema.Types.Mixed, default: null },
+    limiteMinimo: { type: Number, default: null },
+    limiteMaximo: { type: Number, default: null },
+    unidadMedida: { type: String, default: "" },
+    tablaReferencia: { type: String, default: null }
 }, { _id: false });
 
 const RespuestaFormularioSchema = new Schema({

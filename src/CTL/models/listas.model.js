@@ -14,7 +14,7 @@ const CampoFormularioSchema = new Schema({
     tipo: {
         type: String,
         required: true,
-        enum: ["text", "textarea", "number", "radio", "checkbox", "select", "cascading_select", "equipo_select", "boolean", "date", "time", "photo"],
+        enum: ["text", "textarea", "number", "radio", "checkbox", "select", "cascading_select", "equipo_select", "tabla_referencia", "boolean", "date", "time", "photo"],
         default: "text"
     },
     placeholder: { type: String, default: "" },
@@ -24,6 +24,10 @@ const CampoFormularioSchema = new Schema({
     opciones: [{ type: Schema.Types.Mixed }],
     jerarquia: { type: Schema.Types.Mixed, default: null },
     niveles: [{ type: String }],
+    limiteMinimo: { type: Number, default: null },
+    limiteMaximo: { type: Number, default: null },
+    unidadMedida: { type: String, default: "" },
+    tablaReferencia: { type: String, default: null },
     orden: { type: Number, required: true, default: 0 }
 }, { _id: false });
 

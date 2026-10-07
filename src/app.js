@@ -19,7 +19,8 @@ app.use(morgan("dev"));
 const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
-    "https://ctlapp.vercel.app"
+    "https://ctlapp.vercel.app",
+    "https://front-end-ctl.vercel.app"
 ];
 
 app.use(

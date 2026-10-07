@@ -572,39 +572,65 @@ Diseño de plantillas jerárquicas con categorías, subcategorías, preguntas ti
 {
   "_id": "6701d000e42a9b31d0541200",
   "titulo": "Reporte Diario de Operación Harvester",
+  "descripcion": "Inspección preoperacional y registro de mediciones de turno",
   "tipoEquipo": "Harvester",
-  "frecuencia": "diario",
-  "version": "1.0",
+  "version": 1,
   "activo": true,
-  "seccionSeleccionCascada": {
-    "activo": true,
-    "permitirCrearOpciones": true,
-    "niveles": [
-      { "nombre": "Finca", "orden": 1, "requerido": true },
-      { "nombre": "Lote", "orden": 2, "requerido": true }
-    ]
-  },
-  "categorias": [
+  "secciones": [
     {
-      "id": "cat-prod",
-      "titulo": "Producción de Madera",
-      "orden": 1,
-      "subcategorias": [
-        {
-          "id": "sub-vol",
-          "titulo": "Volumen Trozado",
-          "orden": 1,
-          "preguntas": [
-            {
-              "id": "preg-ton",
-              "codigo": "PROD-01",
-              "textoPregunta": "Cantidad de toneladas producidas (t)",
-              "tipoRespuesta": "numero",
-              "requerida": true
-            }
-          ]
-        }
-      ]
+      "id": "sec-cabina",
+      "titulo": "Seguridad y Cabina",
+      "descripcion": "Revisión física del equipo",
+      "orden": 0
+    },
+    {
+      "id": "sec-mediciones",
+      "titulo": "Fluidos y Operación",
+      "descripcion": "Mediciones y maestros vinculados",
+      "orden": 1
+    }
+  ],
+  "campos": [
+    {
+      "id": "c-equipo",
+      "seccionId": "sec-cabina",
+      "label": "Equipo Vinculado",
+      "tipo": "equipo_select",
+      "isDefaultEquipo": true,
+      "required": true,
+      "orden": 0
+    },
+    {
+      "id": "c-freno",
+      "seccionId": "sec-cabina",
+      "label": "¿Freno de estacionamiento operativo?",
+      "tipo": "radio",
+      "opciones": ["Conforme", "No Conforme", "N/A"],
+      "required": true,
+      "orden": 1
+    },
+    {
+      "id": "c-presion",
+      "seccionId": "sec-mediciones",
+      "label": "Presión de Aceite de Motor",
+      "tipo": "number",
+      "limiteMinimo": 25,
+      "limiteMaximo": 75,
+      "unidadMedida": "PSI",
+      "placeholder": "Ej: 50",
+      "descripcion": "Límites informativos (no bloquean el registro al excederse)",
+      "required": true,
+      "orden": 2
+    },
+    {
+      "id": "c-especie",
+      "seccionId": "sec-mediciones",
+      "label": "Especie Forestal Cosechada",
+      "tipo": "tabla_referencia",
+      "tablaReferencia": "especies",
+      "descripcion": "Carga opciones dinámicamente desde el maestro de especies",
+      "required": false,
+      "orden": 3
     }
   ]
 }
@@ -620,39 +646,51 @@ Diseño de plantillas jerárquicas con categorías, subcategorías, preguntas ti
 ```json
 {
   "titulo": "Pre-Uso Diario de Forwarder",
-  "descripcion": "Inspección técnica preoperacional de fluidos y seguridad",
+  "descripcion": "Inspección técnica preoperacional de fluidos, mediciones y seguridad",
   "tipoEquipo": "Forwarder",
-  "frecuencia": "por_turno",
-  "version": "1.0",
+  "version": 1,
   "activo": true,
-  "seccionSeleccionCascada": {
-    "activo": true,
-    "permitirCrearOpciones": false,
-    "niveles": [
-      { "nombre": "Finca", "orden": 1, "requerido": true }
-    ]
-  },
-  "categorias": [
+  "secciones": [
     {
-      "id": "cat-frenos",
-      "titulo": "Sistema de Frenos y Neumáticos",
-      "orden": 1,
-      "subcategorias": [
-        {
-          "id": "sub-freno-servicio",
-          "titulo": "Frenos",
-          "orden": 1,
-          "preguntas": [
-            {
-              "id": "preg-01",
-              "codigo": "SEG-01",
-              "textoPregunta": "¿Frenos de servicio operativos y sin fugas?",
-              "tipoRespuesta": "si_no",
-              "requerida": true
-            }
-          ]
-        }
-      ]
+      "id": "sec-inspeccion",
+      "titulo": "Inspección General",
+      "orden": 0
+    },
+    {
+      "id": "sec-parametros",
+      "titulo": "Parámetros de Medición",
+      "orden": 1
+    }
+  ],
+  "campos": [
+    {
+      "id": "c-equipo-fwd",
+      "seccionId": "sec-inspeccion",
+      "label": "Equipo Vinculado",
+      "tipo": "equipo_select",
+      "isDefaultEquipo": true,
+      "required": true,
+      "orden": 0
+    },
+    {
+      "id": "c-temp-hid",
+      "seccionId": "sec-parametros",
+      "label": "Temperatura Hidráulica (°C)",
+      "tipo": "number",
+      "limiteMinimo": 40,
+      "limiteMaximo": 85,
+      "unidadMedida": "°C",
+      "required": true,
+      "orden": 1
+    },
+    {
+      "id": "c-operador-apoyo",
+      "seccionId": "sec-parametros",
+      "label": "Operador de Apoyo",
+      "tipo": "tabla_referencia",
+      "tablaReferencia": "operadores",
+      "required": false,
+      "orden": 2
     }
   ]
 }
@@ -672,22 +710,42 @@ Diseño de plantillas jerárquicas con categorías, subcategorías, preguntas ti
 - **Método**: `POST`
 - **Ruta**: `/ctl/listas/:id/responder` (o `/ctl/listas/:id/respuestas`)
 - **Permiso**: `checkPermission("listas", "write")`
+- **Comportamiento de Límites**: Los límites de los campos numéricos (`limiteMinimo`, `limiteMaximo`) son estrictamente informativos / orientativos. Si el valor capturado está fuera del rango, se alerta al usuario pero se autoriza el envío y persistencia del formulario.
 - **Request Body**:
 ```json
 {
-  "listaId": "6701d000e42a9b31d0541200",
+  "formularioId": "6701d000e42a9b31d0541200",
   "equipoId": "6701a333e42a9b31d0541033",
-  "fincaId": "6701a555e42a9b31d0541055",
   "operadorId": "6701b777e42a9b31d0541077",
-  "contratistaId": "6701a222e42a9b31d0541022",
-  "turnoId": "6701b888e42a9b31d0541088",
   "fecha": "2026-10-05T08:30:00.000Z",
   "respuestas": [
     {
-      "preguntaId": "preg-ton",
-      "codigo": "PROD-01",
-      "valor": 195.4,
-      "observacion": "Turno sin novedades mecánicas"
+      "campoId": "c-equipo",
+      "label": "Equipo Vinculado",
+      "tipo": "equipo_select",
+      "valor": "6701a333e42a9b31d0541033"
+    },
+    {
+      "campoId": "c-freno",
+      "label": "¿Freno de estacionamiento operativo?",
+      "tipo": "radio",
+      "valor": "Conforme"
+    },
+    {
+      "campoId": "c-presion",
+      "label": "Presión de Aceite de Motor",
+      "tipo": "number",
+      "valor": 80,
+      "limiteMinimo": 25,
+      "limiteMaximo": 75,
+      "unidadMedida": "PSI"
+    },
+    {
+      "campoId": "c-especie",
+      "label": "Especie Forestal Cosechada",
+      "tipo": "tabla_referencia",
+      "tablaReferencia": "especies",
+      "valor": "6701a999e42a9b31d0541099"
     }
   ]
 }
@@ -718,12 +776,35 @@ Diseño de plantillas jerárquicas con categorías, subcategorías, preguntas ti
 
 ## 8. Módulo: Banco de Preguntas (`/ctl/preguntas-banco`)
 
-Banco reutilizable para armar listas operacionales rápidamente.
+Banco reutilizable para armar listas operacionales rápidamente (admite preguntas tipadas con límites de medición y referencias a maestros).
 
 ### 8.1. Listar Preguntas
 - **Método**: `GET`
 - **Ruta**: `/ctl/preguntas-banco`
 - **Permiso**: `checkPermission("listas", "read")`
+- **Response (200 OK)**:
+```json
+[
+  {
+    "_id": "6701f000e42a9b31d0541900",
+    "label": "Presión de Aceite de Motor",
+    "tipo": "number",
+    "categoria": "Fluidos",
+    "limiteMinimo": 25,
+    "limiteMaximo": 75,
+    "unidadMedida": "PSI",
+    "opciones": []
+  },
+  {
+    "_id": "6701f000e42a9b31d0541901",
+    "label": "Especie Forestal Cosechada",
+    "tipo": "tabla_referencia",
+    "categoria": "Operación Forestal",
+    "tablaReferencia": "especies",
+    "opciones": []
+  }
+]
+```
 
 ### 8.2. Crear Pregunta
 - **Método**: `POST`
@@ -732,11 +813,13 @@ Banco reutilizable para armar listas operacionales rápidamente.
 - **Request Body**:
 ```json
 {
-  "textoPregunta": "¿Nivel de combustible al finalizar jornada (%)?",
-  "tipoRespuesta": "numero",
+  "label": "Nivel de combustible al finalizar (%)",
+  "tipo": "number",
   "categoria": "Fluidos y Niveles",
-  "opciones": [],
-  "requerida": true
+  "limiteMinimo": 10,
+  "limiteMaximo": 100,
+  "unidadMedida": "%",
+  "opciones": []
 }
 ```
 

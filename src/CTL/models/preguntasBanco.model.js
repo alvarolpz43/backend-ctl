@@ -8,7 +8,7 @@ const PreguntaBancoSchema = new Schema({
     },
     tipo: {
         type: String,
-        enum: ["radio", "select", "checkbox", "cascading_select"],
+        enum: ["radio", "select", "checkbox", "cascading_select", "number", "tabla_referencia"],
         default: "radio"
     },
     opciones: [{
@@ -22,6 +22,22 @@ const PreguntaBancoSchema = new Schema({
     niveles: [{
         type: String
     }],
+    limiteMinimo: {
+        type: Number,
+        default: null
+    },
+    limiteMaximo: {
+        type: Number,
+        default: null
+    },
+    unidadMedida: {
+        type: String,
+        default: ""
+    },
+    tablaReferencia: {
+        type: String,
+        default: null
+    },
     categoria: {
         type: String,
         default: "General",
