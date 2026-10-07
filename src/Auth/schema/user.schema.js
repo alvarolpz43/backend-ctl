@@ -10,7 +10,8 @@ const registerUserSchema = z.object({
         .email({ message: "Invalid email" }),
     password: z
         .string({ required_error: "password is required" })
-        .min(4, { message: "password must be at least 4 characters" })
+        .min(4, { message: "password must be at least 4 characters" }),
+    roleId: z.string().optional()
 });
 
 const loginSchema = z.object({

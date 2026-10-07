@@ -1,233 +1,250 @@
 import { hash, compare } from "bcryptjs";
 import UserRepository from "../repositories/user.repository.js";
-// import RoleRepository from "../repositories/role.repository.js";
-
+import RoleRepository from "../repositories/role.repository.js";
 import { createAccessToken } from "../libs/jwt.js";
-import {
-    validateToken,
-    authMiddleware,
-} from "../../Middleware/ValidateAuth.js";
-import mongoose from "mongoose";
-import userRepository from "../repositories/user.repository.js";
-/**
- * Registrar usuario
- * @params user
- * @returns
- */
+import { validateToken } from "../../Middleware/ValidateAuth.js";
+
+const formatUserResponse = (user) => {
+  if (!user) return null;
+  const userObj = user.toObject ? user.toObject() : user;
+  const { password, ...safeUser } = userObj;
+  return {
+    ...safeUser,
+    permisos: safeUser.role?.permisos || {},
+  };
+};
 
 const insertUser = async (user) => {
-    const { name, email } = user;
-    const passwordHashed = await hash(user.password, 10);
-    const userPassHashed = { ...user, password: passwordHashed };
+  const { name, email, password, roleId } = user;
+  const emailExist = await UserRepository.findUserByEmail(email);
 
-    //ROLE
-    // const roleExist = await RoleRepository.findRoleById(idRole);
-    // const numeroDocumentoExist =
-    //     await UserRepository.findUserByIdentificationNumber(numeroDocumento);
+  if (emailExist) {
+    return {
+      success: false,
+      message: "El correo electrónico ya se encuentra registrado",
+      status: 400,
+    };
+  }
 
-    const emailExist = await UserRepository.findUserByEmail(email);
-
-    // if (!roleExist) {
-    //     return {
-    //         success: false,
-    //         message: "Role not found",
-    //     };
-    // }
-
-   
-
-
-    if (emailExist) {
-        return {
-            success: false,
-            message: "Email ya Existe",
-        };
+  let assignedRole = null;
+  if (roleId) {
+    assignedRole = await RoleRepository.findById(roleId);
+    if (!assignedRole) {
+      return {
+        success: false,
+        message: "El rol especificado no existe",
+        status: 400,
+      };
     }
+  } else {
+    // Buscar rol por defecto (Operador o Consulta)
+    const defaultRole = await RoleRepository.findByName("Operador de Campo") || await RoleRepository.findByName("Consulta");
+    if (defaultRole) {
+      assignedRole = defaultRole;
+    }
+  }
 
-    const userRegistred = await UserRepository.createUser(userPassHashed);
+  const passwordHashed = await hash(password, 10);
+  const newUserPayload = {
+    name,
+    email,
+    password: passwordHashed,
+    role: assignedRole ? assignedRole._id : undefined,
+  };
 
-    return {
-        success: true,
-        message: "Usuario Registrado",
-        data: userRegistred,
-    };
+  const userRegistered = await UserRepository.createUser(newUserPayload);
+
+  return {
+    success: true,
+    message: "Usuario registrado exitosamente",
+    data: formatUserResponse(userRegistered),
+  };
 };
 
-/**
- * Consultar un usuario
- * @params email
- * @returns
- */
 const getUser = async (email) => {
-    const response = await UserRepository.findUserByEmail(email);
-    return {
-        success: true,
-        message: "User Found",
-        data: response,
-    };
+  const response = await UserRepository.findUserByEmail(email);
+  if (!response) {
+    return { success: false, message: "Usuario no encontrado", status: 404 };
+  }
+  return {
+    success: true,
+    message: "User Found",
+    data: formatUserResponse(response),
+  };
 };
 
-/**
- * Consultar todos los usuarios
- * @params -
- * @returns Users
- */
 const findUsers = async () => {
-    const response = await UserRepository.getAll();
-    return {
-        success: true,
-        data: response,
-    };
+  const response = await UserRepository.getAll();
+  const formatted = response.map(formatUserResponse);
+  return {
+    success: true,
+    data: formatted,
+  };
 };
-
-/**
- * Elimiar usuarios
- * @params id_user
- * @returns
- */
-// const deleteUser = async (_id) => {
-//     const response = await UserRepository.delteOneUser(_id);
-//     return {
-//         seccess: true,
-//         message: "User Deleted",
-//         data: response,
-//     };
-// };
-
-/**
- * Login user
- * @params email, password
- * @returns token
- */
 
 const loginUser = async (email, password) => {
-    const userExist = await UserRepository.findUserByEmail(email);
-    if (!userExist) {
-        return {
-            success: false,
-            message: "Usuario no Encontrado",
-        };
-    }
-
-    const match = await compare(password, userExist.password);
-    if (!match) {
-        return {
-            success: false,
-            message: "Incorrect Password",
-        };
-    }
-    const payload = {
-        userId: userExist._id,
-        email: userExist.email
-    };
-
-    const token = await createAccessToken(payload);
+  const userExist = await UserRepository.findUserByEmail(email);
+  if (!userExist) {
     return {
-        success: true,
-        message: "logged user",
-        token: token,
+      success: false,
+      message: "Credenciales inválidas",
+      status: 401,
     };
+  }
+
+  const match = await compare(password, userExist.password);
+  if (!match) {
+    return {
+      success: false,
+      message: "Credenciales inválidas",
+      status: 401,
+    };
+  }
+
+  const payload = {
+    userId: userExist._id,
+    email: userExist.email,
+  };
+
+  const token = await createAccessToken(payload);
+  const userFormatted = formatUserResponse(userExist);
+
+  return {
+    success: true,
+    message: "Inicio de sesión exitoso",
+    token,
+    user: userFormatted,
+  };
 };
 
 const VerifyAuthUser = async (token) => {
-    const responseValidation = validateToken(token);
+  const responseValidation = validateToken(token);
 
-    if (!responseValidation) {
-        return {
-            success: false,
-            data: "Token is't valid",
-        };
-    }
-
+  if (!responseValidation) {
     return {
-        success: true,
-        data: responseValidation,
+      success: false,
+      message: "Token inválido o expirado",
+      status: 401,
     };
+  }
+
+  const user = await UserRepository.findUserById(responseValidation.userId);
+  if (!user) {
+    return {
+      success: false,
+      message: "Usuario no encontrado",
+      status: 404,
+    };
+  }
+
+  return {
+    success: true,
+    user: formatUserResponse(user),
+  };
 };
 
-// const findUserById = async (id_user) => {
-//     if (!id_user) {
-//         return {
-//             success: false,
-//             message: "Id del usuario es requerido",
-//         };
-//     }
+const updateUserRoleService = async (userId, roleId) => {
+  const role = await RoleRepository.findById(roleId);
+  if (!role) {
+    return { success: false, message: "El rol seleccionado no existe", status: 404 };
+  }
 
-//     if (!mongoose.Types.ObjectId.isValid(id_user)) {
-//         return { success: false, message: "Id Usuario no es valido" };
-//     }
+  const user = await UserRepository.findUserById(userId);
+  if (!user) {
+    return { success: false, message: "Usuario no encontrado", status: 404 };
+  }
 
-//     const response = await UserRepository.findUserById(id_user);
-//     if (!response) {
-//         return {
-//             success: false,
-//             message: "Usuario no encontrado",
-//         };
-//     }
-//     return {
-//         success: true,
-//         data: response,
-//     };
-// };
+  const updated = await UserRepository.updateUserRole(userId, roleId);
+  return {
+    success: true,
+    message: "Rol de usuario actualizado exitosamente",
+    data: formatUserResponse(updated),
+  };
+};
 
-// const updateUser = async (id_user, user_data) => {
-//     try {
-//         if (!id_user) {
-//             return { success: false, message: "El ID del usuario es requerido" };
-//         }
-//         if (!mongoose.Types.ObjectId.isValid(id_user)) {
-//             return { success: false, message: "ID de usuario no es válido" };
-//         }
-//         if (!user_data || Object.keys(user_data).length === 0) {
-//             return { success: false, message: "No hay cambios para actualizar" };
-//         }
+const updateUserService = async (userId, updatePayload) => {
+  const user = await UserRepository.findUserById(userId);
+  if (!user) {
+    return { success: false, message: "Usuario no encontrado", status: 404 };
+  }
 
-//         let updateFields = { ...user_data };
+  const updates = {};
 
-//         // 🔹 Si hay contraseña en los datos enviados, la hasheamos
-//         if (user_data.password) {
-//             updateFields.password = await hash(user_data.password, 10);
-//         }
+  if (updatePayload.name !== undefined) {
+    const trimmedName = updatePayload.name.trim();
+    if (!trimmedName) {
+      return { success: false, message: "El nombre no puede estar vacío", status: 400 };
+    }
+    updates.name = trimmedName;
+  }
 
-//         const userExist = await UserRepository.findUserById(id_user);
-//         if (!userExist) {
-//             return {
-//                 success: false,
-//                 message: 'El Usuario no Existe'
-//             }
-//         }
+  if (updatePayload.email !== undefined) {
+    const trimmedEmail = updatePayload.email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      return { success: false, message: "El correo electrónico no puede estar vacío", status: 400 };
+    }
+    const duplicate = await UserRepository.findUserByEmailExcludeId(trimmedEmail, userId);
+    if (duplicate) {
+      return {
+        success: false,
+        message: "El correo electrónico ya está registrado por otro usuario",
+        status: 400,
+      };
+    }
+    updates.email = trimmedEmail;
+  }
 
-//         // 🔹 Intentar actualizar el usuario
-//         const userUpdated = await UserRepository.updateUser(id_user, updateFields);
+  if (updatePayload.password && updatePayload.password.trim()) {
+    if (updatePayload.password.trim().length < 4) {
+      return { success: false, message: "La contraseña debe tener al menos 4 caracteres", status: 400 };
+    }
+    updates.password = await hash(updatePayload.password.trim(), 10);
+  }
 
-//         if (!userUpdated) {
-//             return {
-//                 success: false,
-//                 message: "Usuario no encontrado o no actualizado",
-//             };
-//         }
+  if (updatePayload.roleId) {
+    const role = await RoleRepository.findById(updatePayload.roleId);
+    if (!role) {
+      return { success: false, message: "El rol seleccionado no existe", status: 404 };
+    }
+    updates.role = role._id;
+  }
 
-//         return {
-//             success: true,
-//             message: "Usuario actualizado correctamente",
-//             data: userUpdated,
-//         };
-//     } catch (error) {
-//         return {
-//             success: false,
-//             message: "Error al actualizar el usuario",
-//             error: error.message,
-//         };
-//     }
-// };
+  const updated = await UserRepository.updateUser(userId, updates);
+  return {
+    success: true,
+    message: "Usuario actualizado exitosamente",
+    data: formatUserResponse(updated),
+  };
+};
+
+const deleteUserService = async (userId, currentUserId) => {
+  if (userId.toString() === currentUserId?.toString()) {
+    return {
+      success: false,
+      message: "No puedes eliminar tu propia cuenta de usuario",
+      status: 400,
+    };
+  }
+
+  const user = await UserRepository.findUserById(userId);
+  if (!user) {
+    return { success: false, message: "Usuario no encontrado", status: 404 };
+  }
+
+  await UserRepository.deleteUser(userId);
+  return {
+    success: true,
+    message: "Usuario eliminado exitosamente",
+  };
+};
 
 export {
-    insertUser,
-    getUser,
-    findUsers,
-    // deleteUser,
-    loginUser,
-    VerifyAuthUser,
-    // findUserById,
-    // updateUser,
+  insertUser,
+  getUser,
+  findUsers,
+  loginUser,
+  VerifyAuthUser,
+  updateUserRoleService,
+  updateUserService,
+  deleteUserService,
 };

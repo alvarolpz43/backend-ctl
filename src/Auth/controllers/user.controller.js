@@ -1,99 +1,118 @@
 import {
-    getUser,
-    insertUser,
-    findUsers,
-    loginUser,
-    VerifyAuthUser,
+  getUser,
+  insertUser,
+  findUsers,
+  loginUser,
+  VerifyAuthUser,
+  updateUserRoleService,
+  updateUserService,
+  deleteUserService,
 } from "../services/user.service.js";
 
-export const registerUsers = async ({ body }, res) => {
-    try {
-        const user = await insertUser(body);
-        res.status(200).json(user);
-    } catch (error) {
-        console.log(error);
-        res
-            .status(400)
-            .json({ message: "Something went wrong in registerUsers", error });
-    }
+export const registerUsers = async (req, res) => {
+  try {
+    const result = await insertUser(req.body);
+    res.status(result.status || 201).json(result);
+  } catch (error) {
+    console.error("Error in registerUsers:", error);
+    res.status(500).json({ success: false, message: "Error al registrar usuario", error: error.message });
+  }
 };
 
-export const getUserDetail = async ({ body }, res) => {
-    try {
-        const user = await getUser(body);
-        res.status(200).json(user);
-    } catch (error) {
-        console.log(error);
-        res
-            .status(400)
-            .json({ message: "Something went wrong in getUserDetail", error });
-    }
+export const getUserDetail = async (req, res) => {
+  try {
+    const result = await getUser(req.params.email || req.body.email);
+    res.status(result.status || 200).json(result);
+  } catch (error) {
+    console.error("Error in getUserDetail:", error);
+    res.status(500).json({ success: false, message: "Error al obtener usuario", error: error.message });
+  }
 };
-
-// export const getUserById = async (req, res) => {
-//     try {
-//         const id_user = req.params.id;
-//         const response = await findUserById(id_user);
-//         res.status(200).json(response);
-//     } catch (error) { }
-// };
 
 export const getAllUsers = async (req, res) => {
-    try {
-        const users = await findUsers();
-        res.status(200).json(users);
-    } catch (error) {
-        res
-            .status(400)
-            .json({ message: "Something went wrong in getAllUsers", error });
-    }
+  try {
+    const users = await findUsers();
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error in getAllUsers:", error);
+    res.status(500).json({ success: false, message: "Error al obtener usuarios", error: error.message });
+  }
 };
 
-export const login = async ({ body }, res) => {
-    try {
-        const response = await loginUser(body.email, body.password);
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const response = await loginUser(email, password);
 
-        if (response.success) {
-            res.cookie("token", response.token, {
-                httpOnly: true,
-                secure: true,
-            });
-
-            return res.status(200).json(response);
-        }
-
-        return res.status(401).json(response);
-    } catch (error) {
-        res.status(400).json({ message: "Something went wrong in login", error });
+    if (response.success) {
+      res.cookie("token", response.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      });
+      return res.status(200).json(response);
     }
+
+    return res.status(response.status || 401).json(response);
+  } catch (error) {
+    console.error("Error in login:", error);
+    res.status(500).json({ success: false, message: "Error en el inicio de sesión", error: error.message });
+  }
 };
 
 export const verifyToken = async (req, res) => {
-    try {
-        const authorization = req.headers.authorization.split(' ')[1];
-        // console.log(req.headers.authorization);
-        console.log(req.headers['authorization'].split(' ')[1]);
-
-        if (!authorization)
-            return res.status(401).json({ message: "Token not Provided" });
-
-        const response = await VerifyAuthUser(authorization);
-        res.status(200).json(response);
-    } catch (error) {
-        console.log(error);
-        res
-            .status(400)
-            .json({ message: "Something went wrong in verifyToken", error });
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, message: "Token no proporcionado" });
     }
+
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Formato de token inválido" });
+    }
+
+    const response = await VerifyAuthUser(token);
+    res.status(response.status || 200).json(response);
+  } catch (error) {
+    console.error("Error in verifyToken:", error);
+    res.status(500).json({ success: false, message: "Error al verificar token", error: error.message });
+  }
 };
 
-// export const editUser = async (req, res) => {
-//     try {
-//         const response = await updateUser(req.params.id, req.body);
-//         res.status(200).json(response);
-//     } catch (error) {
-//         res
-//             .status(400)
-//             .json({ message: "Something went wrong in editUser", error });
-//     }
-// };
+export const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { roleId } = req.body;
+    if (!roleId) {
+      return res.status(400).json({ success: false, message: "El ID del rol es obligatorio" });
+    }
+    const result = await updateUserRoleService(id, roleId);
+    res.status(result.status || 200).json(result);
+  } catch (error) {
+    console.error("Error in updateUserRole:", error);
+    res.status(500).json({ success: false, message: "Error al actualizar rol del usuario", error: error.message });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await updateUserService(id, req.body);
+    res.status(result.status || 200).json(result);
+  } catch (error) {
+    console.error("Error in updateUser:", error);
+    res.status(500).json({ success: false, message: "Error al actualizar usuario", error: error.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUserId = req.user?._id;
+    const result = await deleteUserService(id, currentUserId);
+    res.status(result.status || 200).json(result);
+  } catch (error) {
+    console.error("Error in deleteUser:", error);
+    res.status(500).json({ success: false, message: "Error al eliminar usuario", error: error.message });
+  }
+};
