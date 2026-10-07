@@ -14,7 +14,7 @@ const CampoFormularioSchema = new Schema({
     tipo: {
         type: String,
         required: true,
-        enum: ["text", "textarea", "number", "radio", "checkbox", "select", "cascading_select", "equipo_select", "tabla_referencia", "boolean", "date", "time", "photo"],
+        enum: ["text", "textarea", "number", "radio", "checkbox", "select", "cascading_select", "equipo_select", "tabla_referencia", "boolean", "date", "time", "photo", "array_paradas", "array"],
         default: "text"
     },
     placeholder: { type: String, default: "" },

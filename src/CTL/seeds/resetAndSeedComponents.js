@@ -125,13 +125,9 @@ export const arbolComponentes = COMPONENTES_DATA.reduce((acc, c) => {
 }, []);
 
 export const resetAndSeed = async () => {
-  console.log("🧹 1. Limpiando todas las preguntas, formularios y respuestas previas...");
-  await PreguntaBancoModel.deleteMany({});
-  await ListaTemplateModel.deleteMany({});
-  if (RespuestaListaModel) {
-    await RespuestaListaModel.deleteMany({});
-  }
-  console.log("✅ Colecciones vaciadas.");
+  console.log("🧹 1. Limpiando preguntas de componentes previas...");
+  await PreguntaBancoModel.deleteOne({ label: "Componente / Ítem de Maquinaria" });
+  console.log("✅ Limpieza completada.");
 
   console.log("🌱 2. Creando la única pregunta requerida con las 80 opciones multi-campo en cascada...");
   const preguntaUnica = await PreguntaBancoModel.create({
@@ -145,63 +141,11 @@ export const resetAndSeed = async () => {
     activo: true
   });
   console.log(`✅ Pregunta creada en el banco con ID: ${preguntaUnica._id} (${opcionesEstructuradas.length} opciones en cascada).`);
-
-  console.log("📋 3. Creando el formulario operacional principal con esta pregunta...");
-  const formulario = await ListaTemplateModel.create({
-    titulo: "Inspección y Reporte de Componentes de Maquinaria",
-    nombre: "Inspección y Reporte de Componentes de Maquinaria",
-    descripcion: "Formulario operacional para el reporte e inspección técnica de componentes de maquinaria forestal.",
-    tipoEquipo: "Ambos",
-    version: 1,
-    activo: true,
-    secciones: [
-      {
-        id: "sec_componentes",
-        titulo: "Identificación de Componente",
-        descripcion: "Selecciona el componente específico de la máquina para la inspección o reporte",
-        orden: 1
-      }
-    ],
-    campos: [
-      {
-        id: "campo_componente_maquina",
-        seccionId: "sec_componentes",
-        label: "Componente / Ítem de Maquinaria",
-        tipo: "cascading_select",
-        placeholder: "Selecciona Categoría > Subcategoría > Ítem...",
-        descripcion: "Selección técnica jerárquica: Máquina Base, Grúa o Cabezal Cosechador con sus respectivos sistemas",
-        required: true,
-        opciones: opcionesEstructuradas,
-        jerarquia: arbolComponentes,
-        niveles: ["Categoría", "Subcategoría", "Ítem / Código"],
-        orden: 1
-      },
-      {
-        id: "campo_observacion",
-        seccionId: "sec_componentes",
-        label: "Detalle o Hallazgo del Componente",
-        tipo: "textarea",
-        placeholder: "Describe la condición o síntoma presentado por el componente...",
-        descripcion: "Detalles adicionales para el equipo de mantenimiento",
-        required: false,
-        opciones: [],
-        orden: 2
-      }
-    ]
-  });
-
-  console.log(`✅ Formulario operacional creado con ID: ${formulario._id}`);
 };
 
-async function main() {
-  await connectDb();
-  await resetAndSeed();
-  await mongoose.disconnect();
-  console.log("🎉 Proceso de reset y sembrado completado con éxito.");
-  process.exit(0);
+if (process.argv[1]?.endsWith("resetAndSeedComponents.js")) {
+  main().catch(err => {
+    console.error("Error en resetAndSeed:", err);
+    process.exit(1);
+  });
 }
-
-main().catch(err => {
-  console.error("Error en resetAndSeed:", err);
-  process.exit(1);
-});

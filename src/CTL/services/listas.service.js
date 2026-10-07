@@ -47,6 +47,7 @@ const normalizarTipoCampo = (tipoRaw) => {
     if (t === "dropdown") return "select";
     if (t === "multiselect") return "checkbox";
     if (t === "tablareferencia" || t === "tabla_referencia" || t === "tabla") return "tabla_referencia";
+    if (t === "array_paradas" || t === "array" || t === "paradas" || t === "parada") return "array_paradas";
     return t;
 };
 

@@ -1,12 +1,44 @@
 import { config } from "dotenv";
 import mongoose from "mongoose";
 import PreguntaBancoModel from "../models/preguntasBanco.model.js";
+import { opcionesEstructuradas, arbolComponentes } from "./resetAndSeedComponents.js";
 
 config();
 
 const DEFAULT_OPCIONES = ["BUENO", "REGULAR", "MALO", "N.A"];
 
 export const PREGUNTAS_INICIALES = [
+    // COMPONENTES Y FALLAS (Reemplaza repuesto)
+    {
+        label: "Componente / Ítem de Maquinaria",
+        categoria: "Componentes y Fallas",
+        tipo: "cascading_select",
+        descripcion: "Selección técnica jerárquica en cascada: Categoría > Subcategoría > Ítem con código",
+        opciones: opcionesEstructuradas,
+        jerarquia: arbolComponentes,
+        niveles: ["Categoría", "Subcategoría", "Ítem / Código"],
+        activo: true
+    },
+    // PARADAS OPERATIVAS DINÁMICAS
+    {
+        label: "Registro de Paradas",
+        categoria: "Estado y Tiempos de Máquina",
+        tipo: "array_paradas",
+        descripcion: "Registro dinámico de paradas eventuales durante el turno (tiempo en minutos y motivo)",
+        opciones: [
+            "Falla mecánica",
+            "Esperando reparación",
+            "En reparación",
+            "Espera de transporte / camión",
+            "Cambio de cadena / espada",
+            "Mantenimiento menor",
+            "Condición climática / lluvia",
+            "Atasco de fuste",
+            "Tanqueo / combustible",
+            "Otro motivo"
+        ],
+        activo: true
+    },
     // EPP
     { label: "Casco - Casquete", categoria: "EPP", tipo: "radio", opciones: DEFAULT_OPCIONES, descripcion: "Inspección de integridad del casquete de protección" },
     { label: "Casco - Bandas", categoria: "EPP", tipo: "radio", opciones: DEFAULT_OPCIONES, descripcion: "Estado de las bandas de ajuste del casco" },
@@ -51,9 +83,6 @@ export const PREGUNTAS_INICIALES = [
     { label: "¿Tiempo en alistamiento (minutos)?", categoria: "Estado y Tiempos de Máquina", tipo: "number", unidadMedida: "min", opciones: [], descripcion: "Tiempo de inspección y puesta a punto" },
     { label: "¿Tiempo de tanqueo (minutos)?", categoria: "Estado y Tiempos de Máquina", tipo: "number", unidadMedida: "min", opciones: [], descripcion: "Carga de combustible" },
     { label: "¿Tiempo de alimentación (minutos)?", categoria: "Estado y Tiempos de Máquina", tipo: "number", unidadMedida: "min", opciones: [], descripcion: "Pausa de refrigerio o almuerzo" },
-    { label: "¿Tiempo de paradas mecánicas (minutos)?", categoria: "Estado y Tiempos de Máquina", tipo: "number", unidadMedida: "min", opciones: [], descripcion: "Tiempo improductivo por fallas mecánicas" },
-    { label: "Especificar parada mecanica", categoria: "Estado y Tiempos de Máquina", tipo: "select", opciones: ["en reparacion", "esperando reparacion"], descripcion: "Estado técnico de la parada" },
-    { label: "¿Referencia de repuesto (si aplica)?", categoria: "Estado y Tiempos de Máquina", tipo: "radio", opciones: [], descripcion: "Referencia del repuesto sustituido o solicitado" },
 
     // OPERACIÓN HARVESTER (HV)
     { label: "¿Producción en metros cúbicos (m³)?", categoria: "Operación Harvester", tipo: "number", unidadMedida: "m³", opciones: [], descripcion: "Volumen cosechado en el turno" },
@@ -77,6 +106,13 @@ export const PREGUNTAS_INICIALES = [
 
 export const seedPreguntasBanco = async () => {
     console.log("🌱 Sembrando banco de preguntas de selección reutilizables...");
+    // Eliminar preguntas obsoletas que ya no deben ir separadas
+    const obsoletas = [
+        "¿Tiempo de paradas mecánicas (minutos)?",
+        "Especificar parada mecanica"
+    ];
+    await PreguntaBancoModel.deleteMany({ label: { $in: obsoletas } });
+
     let creadas = 0;
     for (const preg of PREGUNTAS_INICIALES) {
         const existe = await PreguntaBancoModel.findOne({ label: preg.label });

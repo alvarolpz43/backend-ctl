@@ -1,15 +1,44 @@
 import { config } from "dotenv";
 import mongoose from "mongoose";
 import ListaTemplateModel from "../models/listas.model.js";
+import { opcionesEstructuradas, arbolComponentes } from "./resetAndSeedComponents.js";
 
 config();
 
 const SECCIONES_COMUNES = [
     { id: "sec-datos-trabajo", titulo: "1. Datos del Trabajo", descripcion: "Parámetros iniciales de operación, ubicación y turno", orden: 0 },
     { id: "sec-cuestionario-tecnico", titulo: "2. Cuestionario Técnico y Operativo", descripcion: "Estado mecánico, producción y tiempos de jornada", orden: 1 },
-    { id: "sec-paradas-adicionales", titulo: "3. Registro de Paradas Adicionales", descripcion: "Detalle de hasta 5 paradas eventuales en el turno", orden: 2 },
+    { id: "sec-paradas-adicionales", titulo: "3. Registro de Paradas", descripcion: "Registro dinámico de paradas eventuales en el turno", orden: 2 },
     { id: "sec-info-adicional", titulo: "4. Información Adicional y Terreno", descripcion: "Condiciones del terreno, winche y observaciones", orden: 3 }
 ];
+
+export const MOTIVOS_PARADAS = [
+    "Falla mecánica",
+    "En reparación",
+    "Esperando reparación",
+    "Mantenimiento menor",
+    "Cambio de cadena",
+    "Espera de transporte / camión",
+    "Condición climática / lluvia",
+    "Atasco de fuste",
+    "Tanqueo / combustible",
+    "Alimentación / refrigerio",
+    "Otro motivo"
+];
+
+const CAMPO_REGISTRO_PARADAS = {
+    id: "paradas",
+    seccionId: "sec-paradas-adicionales",
+    label: "Registro de Paradas",
+    tipo: "array_paradas",
+    placeholder: "Agregar paradas registradas en el turno...",
+    descripcion: "Registro dinámico de paradas durante el turno de trabajo con tiempo en minutos, motivo y componente afectado en caso de falla mecánica o reparación",
+    required: false,
+    opciones: MOTIVOS_PARADAS,
+    jerarquia: arbolComponentes,
+    niveles: ["Categoría", "Subcategoría", "Ítem / Código"],
+    orden: 20
+};
 
 const CAMPOS_DATOS_TRABAJO = [
     {
@@ -92,19 +121,6 @@ const CAMPOS_DATOS_TRABAJO = [
         required: true,
         orden: 8
     }
-];
-
-const CAMPOS_PARADAS_ADICIONALES = [
-    { id: "parada_1_tiempo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 1 - Tiempo (min)", tipo: "number", unidadMedida: "min", required: false, orden: 23 },
-    { id: "parada_1_motivo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 1 - Motivo", tipo: "text", placeholder: "Motivo parada 1", required: false, orden: 24 },
-    { id: "parada_2_tiempo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 2 - Tiempo (min)", tipo: "number", unidadMedida: "min", required: false, orden: 25 },
-    { id: "parada_2_motivo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 2 - Motivo", tipo: "text", placeholder: "Motivo parada 2", required: false, orden: 26 },
-    { id: "parada_3_tiempo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 3 - Tiempo (min)", tipo: "number", unidadMedida: "min", required: false, orden: 27 },
-    { id: "parada_3_motivo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 3 - Motivo", tipo: "text", placeholder: "Motivo parada 3", required: false, orden: 28 },
-    { id: "parada_4_tiempo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 4 - Tiempo (min)", tipo: "number", unidadMedida: "min", required: false, orden: 29 },
-    { id: "parada_4_motivo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 4 - Motivo", tipo: "text", placeholder: "Motivo parada 4", required: false, orden: 30 },
-    { id: "parada_5_tiempo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 5 - Tiempo (min)", tipo: "number", unidadMedida: "min", required: false, orden: 31 },
-    { id: "parada_5_motivo", seccionId: "sec-paradas-adicionales", label: "Parada Adicional 5 - Motivo", tipo: "text", placeholder: "Motivo parada 5", required: false, orden: 32 }
 ];
 
 export const FORMULARIO_HARVESTER_DATA = {
@@ -224,35 +240,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             required: false,
             orden: 19
         },
-        {
-            id: "paradas_mecanicas",
-            seccionId: "sec-cuestionario-tecnico",
-            label: "¿Tiempo de paradas mecánicas (minutos)?",
-            tipo: "number",
-            unidadMedida: "min",
-            placeholder: "0",
-            required: false,
-            orden: 20
-        },
-        {
-            id: "tEspecificado",
-            seccionId: "sec-cuestionario-tecnico",
-            label: "Especificar parada mecanica",
-            tipo: "select",
-            opciones: ["en reparacion", "esperando reparacion"],
-            required: false,
-            orden: 21
-        },
-        {
-            id: "repuesto",
-            seccionId: "sec-cuestionario-tecnico",
-            label: "¿Referencia de repuesto (si aplica)?",
-            tipo: "text",
-            placeholder: "Referencia de repuesto",
-            required: false,
-            orden: 22
-        },
-        ...CAMPOS_PARADAS_ADICIONALES,
+        CAMPO_REGISTRO_PARADAS,
         {
             id: "winche",
             seccionId: "sec-info-adicional",
@@ -261,7 +249,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             unidadMedida: "h",
             placeholder: "0",
             required: false,
-            orden: 33
+            orden: 21
         },
         {
             id: "suelo",
@@ -270,7 +258,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "select",
             opciones: ["Humedo", "Seco"],
             required: false,
-            orden: 34
+            orden: 22
         },
         {
             id: "novedad",
@@ -279,7 +267,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "textarea",
             placeholder: "Observaciones y novedades del turno",
             required: false,
-            orden: 35
+            orden: 23
         }
     ]
 };
@@ -360,7 +348,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             unidadMedida: "h",
             placeholder: "8",
             required: true,
-            orden: 16
+            orden: 15
         },
         {
             id: "alistamiento",
@@ -370,7 +358,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             unidadMedida: "min",
             placeholder: "0",
             required: false,
-            orden: 17
+            orden: 16
         },
         {
             id: "tanqueo",
@@ -380,7 +368,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             unidadMedida: "min",
             placeholder: "0",
             required: false,
-            orden: 18
+            orden: 17
         },
         {
             id: "alimentacion",
@@ -390,37 +378,12 @@ export const FORMULARIO_FORWARDER_DATA = {
             unidadMedida: "min",
             placeholder: "0",
             required: false,
+            orden: 18
+        },
+        {
+            ...CAMPO_REGISTRO_PARADAS,
             orden: 19
         },
-        {
-            id: "paradas_mecanicas",
-            seccionId: "sec-cuestionario-tecnico",
-            label: "¿Tiempo de paradas mecánicas (minutos)?",
-            tipo: "number",
-            unidadMedida: "min",
-            placeholder: "0",
-            required: false,
-            orden: 20
-        },
-        {
-            id: "tEspecificado",
-            seccionId: "sec-cuestionario-tecnico",
-            label: "Especificar parada mecanica",
-            tipo: "select",
-            opciones: ["en reparacion", "esperando reparacion"],
-            required: false,
-            orden: 21
-        },
-        {
-            id: "repuesto",
-            seccionId: "sec-cuestionario-tecnico",
-            label: "¿Referencia de repuesto (si aplica)?",
-            tipo: "text",
-            placeholder: "Referencia de repuesto",
-            required: false,
-            orden: 22
-        },
-        ...CAMPOS_PARADAS_ADICIONALES,
         {
             id: "saturado",
             seccionId: "sec-info-adicional",
@@ -429,7 +392,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             unidadMedida: "h",
             placeholder: "0",
             required: false,
-            orden: 32
+            orden: 20
         },
         {
             id: "winche",
@@ -439,7 +402,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             unidadMedida: "h",
             placeholder: "0",
             required: false,
-            orden: 33
+            orden: 21
         },
         {
             id: "suelo",
@@ -448,7 +411,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "select",
             opciones: ["Humedo", "Seco"],
             required: false,
-            orden: 34
+            orden: 22
         },
         {
             id: "novedad",
@@ -457,7 +420,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "textarea",
             placeholder: "Observaciones y novedades del turno",
             required: false,
-            orden: 35
+            orden: 23
         }
     ]
 };
