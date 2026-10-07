@@ -41,6 +41,15 @@ const normalizarOpciones = (opciones) => {
     }).filter(Boolean);
 };
 
+const normalizarTipoCampo = (tipoRaw) => {
+    let t = (tipoRaw || "text").toString().toLowerCase().trim();
+    if (t === "rating") return "radio";
+    if (t === "dropdown") return "select";
+    if (t === "multiselect") return "checkbox";
+    if (t === "tablareferencia" || t === "tabla_referencia" || t === "tabla") return "tabla_referencia";
+    return t;
+};
+
 // Normalizador de formulario para garantizar compatibilidad total
 const normalizarFormulario = (doc) => {
     if (!doc) return null;
@@ -64,12 +73,7 @@ const normalizarFormulario = (doc) => {
     const rawCampos = obj.campos && obj.campos.length > 0 ? obj.campos : (obj.preguntas || []);
     const campos = rawCampos.map((c, idx) => {
         const opciones = normalizarOpciones(c.opciones);
-
-        // Mapear tipos antiguos a los tipos estándar Google Forms
-        let tipo = (c.tipo || c.tipoCampo || "text").toLowerCase();
-        if (tipo === "rating") tipo = "radio";
-        if (tipo === "dropdown") tipo = "select";
-        if (tipo === "multiselect") tipo = "checkbox";
+        const tipo = normalizarTipoCampo(c.tipo || c.tipoCampo);
 
         const jerarquia = c.jerarquia || (tipo === "cascading_select" || (opciones[0] && typeof opciones[0] === "object") ? construirJerarquiaArbol(opciones) : null);
         const niveles = c.niveles || (jerarquia ? ["Categoría", "Subcategoría", "Ítem / Código"] : []);
@@ -163,7 +167,7 @@ export const createListaService = async (data) => {
     const rawCampos = data.campos || data.preguntas || [];
     const camposProcesados = rawCampos.map((c, idx) => {
         const opciones = normalizarOpciones(c.opciones);
-        const tipo = (c.tipo || c.tipoCampo || "text").toLowerCase();
+        const tipo = normalizarTipoCampo(c.tipo || c.tipoCampo);
         const jerarquia = c.jerarquia || (tipo === "cascading_select" || (opciones[0] && typeof opciones[0] === "object") ? construirJerarquiaArbol(opciones) : null);
         const niveles = c.niveles || (jerarquia ? ["Categoría", "Subcategoría", "Ítem / Código"] : []);
 
@@ -229,7 +233,7 @@ export const updateListaService = async (id, data) => {
     const rawCampos = data.campos || data.preguntas || actual.campos || [];
     const camposProcesados = rawCampos.map((c, idx) => {
         const opciones = normalizarOpciones(c.opciones);
-        const tipo = (c.tipo || c.tipoCampo || "text").toLowerCase();
+        const tipo = normalizarTipoCampo(c.tipo || c.tipoCampo);
         const jerarquia = c.jerarquia || (tipo === "cascading_select" || (opciones[0] && typeof opciones[0] === "object") ? construirJerarquiaArbol(opciones) : null);
         const niveles = c.niveles || (jerarquia ? ["Categoría", "Subcategoría", "Ítem / Código"] : []);
 
