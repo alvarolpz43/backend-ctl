@@ -35,15 +35,17 @@ Documento de referencia técnica del sistema **CTL (Corte y Transporte Longitudi
   - Prefijo de Operaciones Forestales: `http://localhost:3000/ctl`
 - **Encabezados Globales**:
   - `Content-Type: application/json`
-  - `Authorization: Bearer <JWT_TOKEN>` (para rutas protegidas)
+  - `Authorization: Bearer <JWT_TOKEN>` (obligatorio para **todos** los endpoints; peticiones sin token o con formato incorrecto se bloquean con 401 Unauthorized, con la única excepción de `/login`).
 
 ---
 
 ## 2. Autenticación, Seguridad y Matriz de Permisos (RBAC)
 
-El acceso a cada endpoint de la API está protegido por dos capas de middlewares:
-1. `authMiddleware`: Verifica la presencia y firma válida del token JWT transmitido en la cabecera `Authorization: Bearer <token>`.
-2. `checkPermission(modulo, accion)`: Valida que el rol del usuario autenticado tenga concedido el permiso correspondiente para la acción solicitada:
+El acceso a la API cuenta con una política de seguridad estricta:
+1. **Middleware Global de Autenticación Bearer**: Todas las rutas entrantes (tanto `/ctl/*` como `/auth/*` y rutas generales) exigen obligatoriamente la cabecera `Authorization: Bearer <token>`. Si no se envía el token o el formato es inválido, la petición se bloquea de inmediato con código `401 Unauthorized`.
+   - **Excepción Única**: Las rutas de inicio de sesión (`/login`, `/auth/login`, `/auth/users/login`) no requieren token.
+2. **`authMiddleware`**: Valida la firma del token JWT y carga el usuario autenticado junto con su rol.
+3. **`checkPermission(modulo, accion)`**: Valida que el rol del usuario autenticado tenga concedido el permiso correspondiente para la acción solicitada:
    - `read`: Permite consultar y listar información.
    - `write`: Permite crear nuevos recursos.
    - `update`: Permite editar o actualizar recursos existentes.

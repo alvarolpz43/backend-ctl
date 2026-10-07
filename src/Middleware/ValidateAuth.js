@@ -16,18 +16,39 @@ export const validateToken = (token) => {
 
 export const authMiddleware = async (req, res, next) => {
   try {
-    const authorization = req.headers.authorization?.split(' ')[1];
-
-    if (!authorization) {
-      res.status(401).json({ success: false, error: "Token no proporcionado" });
-      return;
+    // Si la solicitud ya fue autenticada previamente en este ciclo de request, continuar
+    if (req.user) {
+      return next();
     }
 
-    const validation = validateToken(authorization);
+    const authHeader = req.headers.authorization || req.headers.Authorization;
 
-    if (!validation) {
-      res.status(401).json({ success: false, message: "Access Denied" });
-      return;
+    if (!authHeader || typeof authHeader !== "string") {
+      return res.status(401).json({
+        success: false,
+        message: "Acceso denegado: Token no proporcionado",
+        error: "Se requiere encabezado Authorization con Bearer Token",
+      });
+    }
+
+    const parts = authHeader.trim().split(/\s+/);
+    if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
+      return res.status(401).json({
+        success: false,
+        message: "Acceso denegado: Formato de token inválido",
+        error: "El formato de autorización debe ser 'Bearer <token>'",
+      });
+    }
+
+    const token = parts[1];
+    const validation = validateToken(token);
+
+    if (!validation || !validation.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Acceso denegado: Token inválido o expirado",
+        error: "Token no válido o expirado",
+      });
     }
 
     const user = await UserModel.findById(validation.userId)
@@ -35,8 +56,11 @@ export const authMiddleware = async (req, res, next) => {
       .populate("role");
 
     if (!user) {
-      res.status(401).json({ success: false, message: "Usuario no existe" });
-      return;
+      return res.status(401).json({
+        success: false,
+        message: "Acceso denegado: Usuario no existe o no encontrado",
+        error: "Usuario no existe",
+      });
     }
 
     req.user = {
@@ -50,9 +74,10 @@ export const authMiddleware = async (req, res, next) => {
     return next();
   } catch (error) {
     console.error("Error en authMiddleware:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      error: "Error interno en el middleware de autenticación",
+      message: "Error interno en el middleware de autenticación",
+      error: error.message,
     });
   }
 };

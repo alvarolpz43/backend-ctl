@@ -5,8 +5,10 @@ import cors from "cors";
 
 import CTLroutes from "./CTL/indexRoutes.js";
 import AuthRoutes from "./Auth/index.js";
-
-
+import { authMiddleware } from "./Middleware/ValidateAuth.js";
+import { login } from "./Auth/controllers/user.controller.js";
+import { validateSchema } from "./Middleware/ValidatorSchema.js";
+import { loginSchema } from "./Auth/schema/user.schema.js";
 
 config();
 
@@ -18,7 +20,7 @@ const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "https://ctlapp.vercel.app"
-]
+];
 
 app.use(
     cors({
@@ -28,11 +30,31 @@ app.use(
             } else {
                 callback(new Error("Not allowed by CORS"));
             }
-        }, credentials: false,
+        },
+        credentials: false,
         allowedHeaders: ["Content-Type", "Authorization"],
-        methods: ["GET", "POST", "PUT", "DELETE"]
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     })
-)
+);
+
+// Alias directo para POST /login
+app.post("/login", validateSchema(loginSchema), login);
+
+// Middleware global: exige Bearer Token en todos los endpoints, excepto /login
+app.use((req, res, next) => {
+    // Permitir preflight CORS sin requerir token
+    if (req.method === "OPTIONS") {
+        return next();
+    }
+
+    // Excluir endpoints de inicio de sesión (/login, /auth/login, /auth/users/login)
+    const cleanPath = (req.originalUrl || req.path).split("?")[0].toLowerCase().replace(/\/+$/, "");
+    if (cleanPath === "/login" || cleanPath.endsWith("/login")) {
+        return next();
+    }
+
+    return authMiddleware(req, res, next);
+});
 
 app.use("/ctl", CTLroutes);
 app.use("/auth", AuthRoutes);
