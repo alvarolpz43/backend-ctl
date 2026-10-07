@@ -706,7 +706,34 @@ Diseño de plantillas jerárquicas con categorías, subcategorías, preguntas ti
 
 ---
 
-### 7.5. Diligenciar / Enviar Respuestas en Campo
+### 7.5. Sincronizar Plantillas de la App Móvil (`movil_ctl`)
+- **Método**: `POST`
+- **Ruta**: `/ctl/listas/seed-movil`
+- **Permiso**: `checkPermission("listas", "write")`
+- **Descripción**: Carga o sincroniza en la base de datos las plantillas operacionales maestras de Harvester ("Reporte Operacional Harvester (HV)") y Forwarder ("Reporte Operacional Forwarder (FW)") con sus 4 secciones y 36 campos tipados adaptados de la app móvil.
+- **Response (200 OK)**:
+```json
+{
+  "success": true,
+  "message": "Plantillas oficiales de la app móvil (Harvester y Forwarder) sincronizadas con éxito",
+  "data": {
+    "hvTemplate": {
+      "titulo": "Reporte Operacional Harvester (HV)",
+      "tipoEquipo": "Harvester",
+      "campos": 36
+    },
+    "fwTemplate": {
+      "titulo": "Reporte Operacional Forwarder (FW)",
+      "tipoEquipo": "Forwarder",
+      "campos": 36
+    }
+  }
+}
+```
+
+---
+
+### 7.6. Diligenciar / Enviar Respuestas en Campo
 - **Método**: `POST`
 - **Ruta**: `/ctl/listas/:id/responder` (o `/ctl/listas/:id/respuestas`)
 - **Permiso**: `checkPermission("listas", "write")`

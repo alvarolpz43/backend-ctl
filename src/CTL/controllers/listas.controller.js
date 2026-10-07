@@ -178,3 +178,22 @@ export const getListasByEquipoId = async (req, res) => {
         });
     }
 };
+
+export const seedFormulariosMovilController = async (req, res) => {
+    try {
+        const { seedFormulariosMovil } = await import("../seeds/seedFormulariosMovil.js");
+        const result = await seedFormulariosMovil();
+        return res.status(200).json({
+            success: true,
+            message: "Plantillas oficiales de la app móvil (Harvester y Forwarder) sincronizadas con éxito",
+            data: result
+        });
+    } catch (error) {
+        console.error("Error en seedFormulariosMovilController:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error al sincronizar plantillas móviles",
+            error: process.env.NODE_ENV === "development" ? error.message : undefined
+        });
+    }
+};

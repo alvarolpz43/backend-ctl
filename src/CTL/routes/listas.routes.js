@@ -11,6 +11,7 @@ import {
   getRespuestasByLista,
   getListasByTipoEquipo,
   getListasByEquipoId,
+  seedFormulariosMovilController,
 } from "../controllers/listas.controller.js";
 import { listaTemplateSchema } from "../schemas/listas.schema.js";
 import { validateSchema } from "../../Middleware/ValidatorSchema.js";
@@ -19,6 +20,7 @@ import { checkPermission } from "../../Middleware/CheckPermission.js";
 const routerListas = Router();
 
 routerListas.get("/", checkPermission("listas", "read"), getAllListas);
+routerListas.post("/seed-movil", checkPermission("listas", "write"), seedFormulariosMovilController);
 routerListas.get("/por-tipo/:tipoEquipo", checkPermission("listas", "read"), getListasByTipoEquipo);
 routerListas.get("/por-equipo/:equipoId", checkPermission("listas", "read"), getListasByEquipoId);
 routerListas.get("/:id", checkPermission("listas", "read"), getListaById);

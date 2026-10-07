@@ -82,9 +82,14 @@ const normalizarFormulario = (doc) => {
             placeholder: c.placeholder || "",
             descripcion: c.descripcion || c.detalle || "",
             required: c.required !== undefined ? Boolean(c.required) : Boolean(c.requerido),
+            isDefaultEquipo: Boolean(c.isDefaultEquipo),
             opciones,
             jerarquia,
             niveles,
+            limiteMinimo: c.limiteMinimo !== undefined ? c.limiteMinimo : null,
+            limiteMaximo: c.limiteMaximo !== undefined ? c.limiteMaximo : null,
+            unidadMedida: c.unidadMedida || "",
+            tablaReferencia: c.tablaReferencia || null,
             orden: c.orden !== undefined ? c.orden : idx + 1
         };
     });
@@ -170,9 +175,14 @@ export const createListaService = async (data) => {
             placeholder: c.placeholder || "",
             descripcion: c.descripcion || "",
             required: Boolean(c.required !== undefined ? c.required : c.requerido),
+            isDefaultEquipo: Boolean(c.isDefaultEquipo),
             opciones,
             jerarquia,
             niveles,
+            limiteMinimo: c.limiteMinimo !== undefined ? c.limiteMinimo : null,
+            limiteMaximo: c.limiteMaximo !== undefined ? c.limiteMaximo : null,
+            unidadMedida: c.unidadMedida || "",
+            tablaReferencia: c.tablaReferencia || null,
             orden: c.orden !== undefined ? c.orden : idx + 1
         };
     });
@@ -231,9 +241,14 @@ export const updateListaService = async (id, data) => {
             placeholder: c.placeholder || "",
             descripcion: c.descripcion || "",
             required: Boolean(c.required !== undefined ? c.required : c.requerido),
+            isDefaultEquipo: Boolean(c.isDefaultEquipo),
             opciones,
             jerarquia,
             niveles,
+            limiteMinimo: c.limiteMinimo !== undefined ? c.limiteMinimo : null,
+            limiteMaximo: c.limiteMaximo !== undefined ? c.limiteMaximo : null,
+            unidadMedida: c.unidadMedida || "",
+            tablaReferencia: c.tablaReferencia || null,
             orden: c.orden !== undefined ? c.orden : idx + 1
         };
     });
