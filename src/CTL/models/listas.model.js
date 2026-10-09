@@ -14,7 +14,7 @@ const CampoFormularioSchema = new Schema({
     tipo: {
         type: String,
         required: true,
-        enum: ["text", "textarea", "number", "radio", "checkbox", "select", "cascading_select", "equipo_select", "tabla_referencia", "boolean", "date", "time", "photo", "array_paradas", "array"],
+        enum: ["text", "textarea", "number", "radio", "checkbox", "select", "cascading_select", "equipo_select", "tabla_referencia", "boolean", "date", "datetime-local", "datetime", "time", "photo", "array_paradas", "array"],
         default: "text"
     },
     placeholder: { type: String, default: "" },
@@ -28,6 +28,7 @@ const CampoFormularioSchema = new Schema({
     limiteMaximo: { type: Number, default: null },
     unidadMedida: { type: String, default: "" },
     tablaReferencia: { type: String, default: null },
+    condicion: { type: Schema.Types.Mixed, default: null },
     orden: { type: Number, required: true, default: 0 }
 }, { _id: false });
 

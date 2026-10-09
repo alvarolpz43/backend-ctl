@@ -5,7 +5,7 @@ const campoFormularioSchema = z.object({
     seccionId: z.string().optional().default("default"),
     label: z.string({ required_error: "La etiqueta o pregunta es requerida" }),
     tipo: z.enum([
-        "text", "textarea", "number", "radio", "checkbox", "select", "cascading_select", "equipo_select", "tabla_referencia", "boolean", "date", "time", "photo", "array_paradas", "array"
+        "text", "textarea", "number", "radio", "checkbox", "select", "cascading_select", "equipo_select", "tabla_referencia", "boolean", "date", "datetime-local", "datetime", "time", "photo", "array_paradas", "array"
     ]).default("text"),
     placeholder: z.string().optional().default(""),
     descripcion: z.string().optional().default(""),
@@ -18,6 +18,7 @@ const campoFormularioSchema = z.object({
     limiteMaximo: z.number().nullable().optional(),
     unidadMedida: z.string().optional().default(""),
     tablaReferencia: z.string().nullable().optional(),
+    condicion: z.any().optional().nullable(),
     orden: z.number().optional().default(0)
 });
 

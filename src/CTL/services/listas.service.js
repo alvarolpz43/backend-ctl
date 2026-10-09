@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import {
     findAllListas,
     findListaById,
@@ -98,6 +99,7 @@ const normalizarFormulario = (doc) => {
             limiteMaximo: c.limiteMaximo !== undefined ? c.limiteMaximo : null,
             unidadMedida: c.unidadMedida || "",
             tablaReferencia: c.tablaReferencia || null,
+            condicion: c.condicion || null,
             orden: c.orden !== undefined ? c.orden : idx + 1
         };
     });
@@ -436,9 +438,19 @@ export const registrarRespuestaService = async (payload, currentUser) => {
         }
     }
 
-    // Validar campos requeridos
+    // Validar campos requeridos respetando condiciones activas
     const camposFaltantes = [];
     for (const campo of formNorm.campos) {
+        if (campo.condicion && campo.condicion.campoId) {
+            const condValor = respuestasMap[campo.condicion.campoId];
+            const op = campo.condicion.operador || "equals";
+            if (op === "equals" && condValor !== campo.condicion.valor) {
+                continue;
+            }
+            if (op === "not_equals" && condValor === campo.condicion.valor) {
+                continue;
+            }
+        }
         if (campo.required) {
             const val = respuestasMap[campo.id];
             if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
@@ -464,14 +476,41 @@ export const registrarRespuestaService = async (payload, currentUser) => {
         }
     }
 
+    // Extraer producción reportada en m3 para alimentar planeación y KPIs
+    const produccionReportada = Number(respuestasMap.m3) || 0;
+
+    // Resolver fincaId
+    let resolvedFincaId = payload.fincaId || null;
+    if (!resolvedFincaId && respuestasMap.finca && mongoose.Types.ObjectId.isValid(respuestasMap.finca)) {
+        resolvedFincaId = respuestasMap.finca;
+    }
+
+    // Resolver operadorId
+    let resolvedOperadorId = payload.operadorId || null;
+    if (!resolvedOperadorId && respuestasMap.operador && mongoose.Types.ObjectId.isValid(respuestasMap.operador)) {
+        resolvedOperadorId = respuestasMap.operador;
+    }
+
+    // Resolver fecha con hora exacta
+    let resolvedFecha = new Date();
+    const rawFecha = respuestasMap.fecha || payload.fecha;
+    if (rawFecha) {
+        const parsed = new Date(rawFecha);
+        if (!isNaN(parsed.getTime())) {
+            resolvedFecha = parsed;
+        }
+    }
+
     const nuevaRespuesta = await saveRespuesta({
         formularioId: formulario._id,
         formularioTituloSnapshot: formNorm.titulo,
         tipoEquipoSnapshot: formNorm.tipoEquipo,
         equipoId: resolvedEquipoId,
-        operadorId: payload.operadorId || null,
+        fincaId: resolvedFincaId,
+        operadorId: resolvedOperadorId,
         usuarioRegistroId: currentUser ? currentUser._id : null,
-        fecha: payload.fecha ? new Date(payload.fecha) : new Date(),
+        fecha: resolvedFecha,
+        produccionToneladas: produccionReportada,
         respuestas: respuestasArray,
         respuestasMap
     });

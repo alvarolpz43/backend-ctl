@@ -6,10 +6,30 @@ import { opcionesEstructuradas, arbolComponentes } from "./resetAndSeedComponent
 config();
 
 const SECCIONES_COMUNES = [
-    { id: "sec-datos-trabajo", titulo: "1. Datos del Trabajo", descripcion: "Parámetros iniciales de operación, ubicación y turno", orden: 0 },
-    { id: "sec-cuestionario-tecnico", titulo: "2. Cuestionario Técnico y Operativo", descripcion: "Estado mecánico, producción y tiempos de jornada", orden: 1 },
-    { id: "sec-paradas-adicionales", titulo: "3. Registro de Paradas", descripcion: "Registro dinámico de paradas eventuales en el turno", orden: 2 },
-    { id: "sec-info-adicional", titulo: "4. Información Adicional y Terreno", descripcion: "Condiciones del terreno, winche y observaciones", orden: 3 }
+    {
+        id: "sec-datos-trabajo",
+        titulo: "1. Datos del Trabajo",
+        descripcion: "Parámetros iniciales de operación, ubicación y turno",
+        orden: 0
+    },
+    {
+        id: "sec-cuestionario-tecnico",
+        titulo: "2. Cuestionario Técnico",
+        descripcion: "Estado mecánico, producción y tiempos de jornada (ramificación según funcionamiento)",
+        orden: 1
+    },
+    {
+        id: "sec-paradas-adicionales",
+        titulo: "3. Registro de Paradas",
+        descripcion: "Registro de paradas durante el turno de trabajo con causas y componentes afectados",
+        orden: 2
+    },
+    {
+        id: "sec-info-adicional",
+        titulo: "4. Información Adicional",
+        descripcion: "Condiciones del terreno, winche y novedades",
+        orden: 3
+    }
 ];
 
 export const MOTIVOS_PARADAS = [
@@ -32,7 +52,7 @@ const CAMPO_REGISTRO_PARADAS = {
     label: "Registro de Paradas",
     tipo: "array_paradas",
     placeholder: "Agregar paradas registradas en el turno...",
-    descripcion: "Registro dinámico de paradas durante el turno de trabajo con tiempo en minutos, motivo y componente afectado en caso de falla mecánica o reparación",
+    descripcion: "Registro de paradas durante el turno con tiempo en minutos, causa y componente afectado si aplica",
     required: false,
     opciones: MOTIVOS_PARADAS,
     jerarquia: arbolComponentes,
@@ -53,8 +73,8 @@ const CAMPOS_DATOS_TRABAJO = [
     {
         id: "fecha",
         seccionId: "sec-datos-trabajo",
-        label: "Fecha del Reporte",
-        tipo: "date",
+        label: "Fecha y Hora",
+        tipo: "datetime-local",
         required: true,
         orden: 1
     },
@@ -97,7 +117,7 @@ const CAMPOS_DATOS_TRABAJO = [
     {
         id: "especie",
         seccionId: "sec-datos-trabajo",
-        label: "Especie Forestal",
+        label: "Especie",
         tipo: "tabla_referencia",
         tablaReferencia: "especies",
         required: true,
@@ -106,7 +126,7 @@ const CAMPOS_DATOS_TRABAJO = [
     {
         id: "turno",
         seccionId: "sec-datos-trabajo",
-        label: "Turno de Operación",
+        label: "Turno",
         tipo: "tabla_referencia",
         tablaReferencia: "turnos",
         required: true,
@@ -115,7 +135,7 @@ const CAMPOS_DATOS_TRABAJO = [
     {
         id: "operador",
         seccionId: "sec-datos-trabajo",
-        label: "Operador Responsable",
+        label: "Operador",
         tipo: "tabla_referencia",
         tablaReferencia: "operadores",
         required: true,
@@ -126,22 +146,25 @@ const CAMPOS_DATOS_TRABAJO = [
 export const FORMULARIO_HARVESTER_DATA = {
     titulo: "Reporte Operacional Harvester (HV)",
     nombre: "Reporte Operacional Harvester (HV)",
-    descripcion: "Formulario operacional de campo para Harvester adaptado de la app movil_ctl (datos de trabajo, rendimientos, tiempos y terreno)",
+    descripcion: "Formulario operacional de campo para Harvester adaptado de la app movil_ctl con ramificación condicional según estado del equipo",
     tipoEquipo: "Harvester",
     version: 1,
     activo: true,
     secciones: SECCIONES_COMUNES,
     campos: [
         ...CAMPOS_DATOS_TRABAJO,
+        // 2.1 Estado del equipo (fijo, todas las pantallas)
         {
             id: "estado_equipo",
             seccionId: "sec-cuestionario-tecnico",
             label: "¿El equipo está en funcionamiento?",
             tipo: "radio",
-            opciones: ["Sí (En uso)", "No (No operativo)"],
+            opciones: ["Sí", "No"],
             required: true,
+            descripcion: "Sí: Rama operativa | No: Rama no operativa",
             orden: 9
         },
+        // 2.2 Preguntas operativas - Harvester (Hv) (Rama Sí)
         {
             id: "m3",
             seccionId: "sec-cuestionario-tecnico",
@@ -149,6 +172,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "number",
             unidadMedida: "m³",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 10
         },
@@ -159,6 +183,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "number",
             unidadMedida: "cm",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 11
         },
@@ -169,6 +194,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "number",
             unidadMedida: "°",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 12
         },
@@ -178,6 +204,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             label: "¿N.º total de fustes?",
             tipo: "number",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 13
         },
@@ -188,6 +215,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "number",
             unidadMedida: "m³/h",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 14
         },
@@ -197,9 +225,11 @@ export const FORMULARIO_HARVESTER_DATA = {
             label: "¿Cantidad de fustes por hora?",
             tipo: "number",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 15
         },
+        // Común a operativas y no operativas
         {
             id: "tiempo_programado",
             seccionId: "sec-cuestionario-tecnico",
@@ -217,6 +247,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "number",
             unidadMedida: "min",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 17
         },
@@ -227,6 +258,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "number",
             unidadMedida: "min",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 18
         },
@@ -237,10 +269,13 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "number",
             unidadMedida: "min",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 19
         },
+        // Sección 3: Registro de paradas dinámico
         CAMPO_REGISTRO_PARADAS,
+        // Sección 4: Información Adicional - Harvester
         {
             id: "winche",
             seccionId: "sec-info-adicional",
@@ -248,6 +283,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             tipo: "number",
             unidadMedida: "h",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 21
         },
@@ -257,6 +293,7 @@ export const FORMULARIO_HARVESTER_DATA = {
             label: "Suelo",
             tipo: "select",
             opciones: ["Humedo", "Seco"],
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 22
         },
@@ -275,22 +312,25 @@ export const FORMULARIO_HARVESTER_DATA = {
 export const FORMULARIO_FORWARDER_DATA = {
     titulo: "Reporte Operacional Forwarder (FW)",
     nombre: "Reporte Operacional Forwarder (FW)",
-    descripcion: "Formulario operacional de campo para Forwarder adaptado de la app movil_ctl (datos de trabajo, extracción, cargas, distancias y suelo)",
+    descripcion: "Formulario operacional de campo para Forwarder adaptado de la app movil_ctl con ramificación condicional según estado del equipo",
     tipoEquipo: "Forwarder",
     version: 1,
     activo: true,
     secciones: SECCIONES_COMUNES,
     campos: [
         ...CAMPOS_DATOS_TRABAJO,
+        // 2.1 Estado del equipo (fijo, todas las pantallas)
         {
             id: "estado_equipo",
             seccionId: "sec-cuestionario-tecnico",
             label: "¿El equipo está en funcionamiento?",
             tipo: "radio",
-            opciones: ["Sí (En uso)", "No (No operativo)"],
+            opciones: ["Sí", "No"],
             required: true,
+            descripcion: "Sí: Rama operativa | No: Rama no operativa",
             orden: 9
         },
+        // 2.3 Preguntas operativas - Forwarder (Fw) (Rama Sí)
         {
             id: "m3",
             seccionId: "sec-cuestionario-tecnico",
@@ -298,6 +338,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "m³",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 10
         },
@@ -308,6 +349,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "°",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 11
         },
@@ -317,6 +359,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             label: "¿N.º de cargas extraídas del lote?",
             tipo: "number",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 12
         },
@@ -327,6 +370,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "t",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 13
         },
@@ -337,9 +381,11 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "m",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 14
         },
+        // Común a operativas y no operativas
         {
             id: "tiempo_programado",
             seccionId: "sec-cuestionario-tecnico",
@@ -357,6 +403,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "min",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 16
         },
@@ -367,6 +414,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "min",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 17
         },
@@ -377,13 +425,16 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "min",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 18
         },
+        // Sección 3: Registro de paradas dinámico
         {
             ...CAMPO_REGISTRO_PARADAS,
             orden: 19
         },
+        // Sección 4: Información Adicional - Forwarder
         {
             id: "saturado",
             seccionId: "sec-info-adicional",
@@ -391,6 +442,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "h",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 20
         },
@@ -401,6 +453,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             tipo: "number",
             unidadMedida: "h",
             placeholder: "0",
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 21
         },
@@ -410,6 +463,7 @@ export const FORMULARIO_FORWARDER_DATA = {
             label: "Suelo",
             tipo: "select",
             opciones: ["Humedo", "Seco"],
+            condicion: { campoId: "estado_equipo", operador: "eq", valor: "Sí" },
             required: false,
             orden: 22
         },
@@ -426,43 +480,25 @@ export const FORMULARIO_FORWARDER_DATA = {
 };
 
 export const seedFormulariosMovil = async () => {
-    console.log("🌱 Inicializando plantillas operacionales de la app movil_ctl (HV y FW)...");
+    console.log("🌱 Borrando y recreando formularios operacionales de la app movil_ctl (HV y FW)...");
 
-    // 1. Harvester
-    let hvTemplate = await ListaTemplateModel.findOne({
-        $or: [{ titulo: FORMULARIO_HARVESTER_DATA.titulo }, { nombre: FORMULARIO_HARVESTER_DATA.nombre }]
+    // Borrar plantillas previas de Harvester y Forwarder
+    const deleteResult = await ListaTemplateModel.deleteMany({
+        $or: [
+            { tipoEquipo: { $in: ["Harvester", "Forwarder"] } },
+            { titulo: { $regex: /Harvester|Forwarder/i } },
+            { nombre: { $regex: /Harvester|Forwarder/i } }
+        ]
     });
+    console.log(`🗑️ Formularios anteriores eliminados: ${deleteResult.deletedCount}`);
 
-    if (hvTemplate) {
-        hvTemplate.secciones = FORMULARIO_HARVESTER_DATA.secciones;
-        hvTemplate.campos = FORMULARIO_HARVESTER_DATA.campos;
-        hvTemplate.descripcion = FORMULARIO_HARVESTER_DATA.descripcion;
-        hvTemplate.tipoEquipo = FORMULARIO_HARVESTER_DATA.tipoEquipo;
-        hvTemplate.activo = true;
-        await hvTemplate.save();
-        console.log(`✅ Plantilla actualizada: "${FORMULARIO_HARVESTER_DATA.titulo}" (${FORMULARIO_HARVESTER_DATA.campos.length} campos)`);
-    } else {
-        hvTemplate = await ListaTemplateModel.create(FORMULARIO_HARVESTER_DATA);
-        console.log(`✅ Plantilla creada: "${FORMULARIO_HARVESTER_DATA.titulo}" (${FORMULARIO_HARVESTER_DATA.campos.length} campos)`);
-    }
+    // Crear Harvester nuevo
+    const hvTemplate = await ListaTemplateModel.create(FORMULARIO_HARVESTER_DATA);
+    console.log(`✅ Formulario Harvester creado: "${hvTemplate.titulo}" (${hvTemplate.campos.length} campos)`);
 
-    // 2. Forwarder
-    let fwTemplate = await ListaTemplateModel.findOne({
-        $or: [{ titulo: FORMULARIO_FORWARDER_DATA.titulo }, { nombre: FORMULARIO_FORWARDER_DATA.nombre }]
-    });
-
-    if (fwTemplate) {
-        fwTemplate.secciones = FORMULARIO_FORWARDER_DATA.secciones;
-        fwTemplate.campos = FORMULARIO_FORWARDER_DATA.campos;
-        fwTemplate.descripcion = FORMULARIO_FORWARDER_DATA.descripcion;
-        fwTemplate.tipoEquipo = FORMULARIO_FORWARDER_DATA.tipoEquipo;
-        fwTemplate.activo = true;
-        await fwTemplate.save();
-        console.log(`✅ Plantilla actualizada: "${FORMULARIO_FORWARDER_DATA.titulo}" (${FORMULARIO_FORWARDER_DATA.campos.length} campos)`);
-    } else {
-        fwTemplate = await ListaTemplateModel.create(FORMULARIO_FORWARDER_DATA);
-        console.log(`✅ Plantilla creada: "${FORMULARIO_FORWARDER_DATA.titulo}" (${FORMULARIO_FORWARDER_DATA.campos.length} campos)`);
-    }
+    // Crear Forwarder nuevo
+    const fwTemplate = await ListaTemplateModel.create(FORMULARIO_FORWARDER_DATA);
+    console.log(`✅ Formulario Forwarder creado: "${fwTemplate.titulo}" (${fwTemplate.campos.length} campos)`);
 
     return { hvTemplate, fwTemplate };
 };

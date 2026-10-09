@@ -144,12 +144,23 @@ export const getAllPlaneaciones = async () => {
 /**
  * Función que computa la ejecución real para cada línea en base a la información operacional reportada
  * REGLA DE NEGOCIO:
- * 1. El Harvester (HV) derriba/troza y dictamina cuánto se saca mensual (Producción de la Línea).
- * 2. Esa producción de los HV de la línea se divide equitativamente entre los Forwarders (FW) de la línea.
+ * 1. El Forwarder (FW) extrae la madera del bosque a borde de vía / cancha, dictaminando
+ *    el cumplimiento real de la meta mensual de la línea.
+ * 2. El Harvester (HV) troza y derriba en bosque, registrando el avance de cosecha.
  */
 async function calcularEjecucionPlaneacion(plan, anio, mes) {
   const startDate = new Date(anio, mes - 1, 1, 0, 0, 0);
   const endDate = new Date(anio, mes, 0, 23, 59, 59, 999);
+
+  // Helper seguro para extraer m3 reportados
+  const getM3Reporte = (r) => {
+    const valRoot = Number(r.produccionToneladas);
+    if (!isNaN(valRoot) && valRoot > 0) return valRoot;
+    const valMap = r.respuestasMap?.get ? Number(r.respuestasMap.get("m3")) : Number(r.respuestasMap?.m3);
+    if (!isNaN(valMap) && valMap > 0) return valMap;
+    const valArray = Number(r.respuestas?.find((x) => x.campoId === "m3")?.valor);
+    return !isNaN(valArray) ? valArray : 0;
+  };
 
   // Consultar todas las respuestas operacionales del mes
   const respuestasMes = await respuestaListaModel.find({
@@ -169,7 +180,7 @@ async function calcularEjecucionPlaneacion(plan, anio, mes) {
     const fwIds = (item.forwarders || []).map((f) => (f._id ? f._id.toString() : f.toString()));
     const fincasIds = (item.fincas || []).map((f) => (f._id ? f._id.toString() : f.toString()));
 
-    // 1. Calcular producción de cada Harvester de la línea
+    // 1. Calcular producción de cada Harvester de la línea (Cosecha / Trozado en bosque)
     const harvestersDetalle = (item.harvesters || []).map((hv) => {
       const hvIdStr = (hv._id || hv).toString();
       const reportesHv = respuestasMes.filter((r) => {
@@ -180,8 +191,7 @@ async function calcularEjecucionPlaneacion(plan, anio, mes) {
       });
 
       const toneladasReportadas = reportesHv.reduce((acc, r) => {
-        const val = Number(r.produccionToneladas) || 0;
-        return acc + val;
+        return acc + getM3Reporte(r);
       }, 0);
 
       return {
@@ -193,31 +203,39 @@ async function calcularEjecucionPlaneacion(plan, anio, mes) {
       };
     });
 
-    // Producción total de la línea (dictaminada por los Harvesters)
     const produccionLineaHV = harvestersDetalle.reduce((acc, h) => acc + h.toneladas, 0);
-    produccionTotalMes += produccionLineaHV;
 
-    // 2. Distribuir equitativamente entre los Forwarders de la línea
-    const cantFw = item.forwarders ? item.forwarders.length : 0;
-    const toneladasPorFw = cantFw > 0 ? Number((produccionLineaHV / cantFw).toFixed(2)) : 0;
-
+    // 2. Calcular producción de cada Forwarder de la línea (Extracción real a borde de vía / Cancha)
+    // EL FORWARDER ES EL QUE COMPLETA LA META DE PRODUCCIÓN
     const forwardersDetalle = (item.forwarders || []).map((fw) => {
       const fwIdStr = (fw._id || fw).toString();
       const reportesFw = respuestasMes.filter((r) => {
-        return r.equipoId && (r.equipoId._id || r.equipoId).toString() === fwIdStr;
+        const matchEquipo = r.equipoId && (r.equipoId._id || r.equipoId).toString() === fwIdStr;
+        const matchFinca = fincasIds.length === 0 || (r.fincaId && fincasIds.includes((r.fincaId._id || r.fincaId).toString()));
+        return matchEquipo && matchFinca;
       });
+
+      const toneladasReportadas = reportesFw.reduce((acc, r) => {
+        return acc + getM3Reporte(r);
+      }, 0);
 
       return {
         _id: fw._id || fw,
         nombreEquipo: fw.nombreEquipo || "Forwarder",
         serieEquipo: fw.serieEquipo || "",
-        toneladasAtribuidas: toneladasPorFw,
+        toneladas: toneladasReportadas,
+        toneladasAtribuidas: toneladasReportadas, // Retrocompatibilidad
         cantidadReportesOperacion: reportesFw.length,
       };
     });
 
+    // Producción real de la línea: dictaminada por la extracción de los Forwarders
+    const produccionLineaFW = forwardersDetalle.reduce((acc, f) => acc + f.toneladas, 0);
+    produccionTotalMes += produccionLineaFW;
+
+    const cantFw = item.forwarders ? item.forwarders.length : 0;
     const porcentajeCumplimiento = metaMinima > 0
-      ? Number(((produccionLineaHV / metaMinima) * 100).toFixed(1))
+      ? Number(((produccionLineaFW / metaMinima) * 100).toFixed(1))
       : 0;
 
     lineasResumen.push({
@@ -227,13 +245,14 @@ async function calcularEjecucionPlaneacion(plan, anio, mes) {
       fincas: item.fincas || [],
       metaMinimaToneladas: metaMinima,
       horasProgramadas: Number(item.horasProgramadas) || 0,
-      produccionRealToneladas: produccionLineaHV,
+      produccionRealToneladas: produccionLineaFW, // Dictaminada por Forwarders
+      produccionCosechaHarvester: produccionLineaHV, // Cosecha en bosque
       porcentajeCumplimiento,
-      diferenciaMeta: Number((produccionLineaHV - metaMinima).toFixed(2)),
+      diferenciaMeta: Number((produccionLineaFW - metaMinima).toFixed(2)),
       harvesters: harvestersDetalle,
       forwarders: forwardersDetalle,
       cantidadForwarders: cantFw,
-      toneladasPorForwarder: toneladasPorFw,
+      toneladasPorForwarder: cantFw > 0 ? Number((produccionLineaFW / cantFw).toFixed(2)) : 0,
     });
   }
 
