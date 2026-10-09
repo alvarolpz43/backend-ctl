@@ -1,5 +1,8 @@
 import ListaTemplateModel from "../models/listas.model.js";
 import RespuestaListaModel from "../models/respuestasLista.model.js";
+import "../models/equipos.model.js";
+import "../models/operador.model.js";
+import "../../Auth/models/user.model.js";
 
 export const findAllListas = async (query = {}) => {
     return await ListaTemplateModel.find(query).sort({ createdAt: -1 });
@@ -47,14 +50,32 @@ export const findRespuestasByListaId = async (formularioId) => {
     return await RespuestaListaModel.find({
         $or: [{ formularioId }, { listaTemplateId: formularioId }]
     })
-        .populate("operadorId", "nombreOperador cedula")
-        .populate("equipoId", "nombreEquipo serieEquipo")
+        .populate("formularioId", "titulo nombre tipoEquipo version")
+        .populate("operadorId", "nameOperador nombreOperador cedula numCedula")
+        .populate("equipoId", "nombreEquipo serieEquipo tipoEquipo")
         .populate("usuarioRegistroId", "name email")
-        .sort({ fecha: -1 });
+        .sort({ fecha: -1, createdAt: -1 });
+};
+
+export const findAllRespuestas = async (query = {}) => {
+    return await RespuestaListaModel.find(query)
+        .populate("formularioId", "titulo nombre tipoEquipo version")
+        .populate("operadorId", "nameOperador nombreOperador cedula numCedula")
+        .populate("equipoId", "nombreEquipo serieEquipo tipoEquipo")
+        .populate("usuarioRegistroId", "name email")
+        .sort({ fecha: -1, createdAt: -1 });
 };
 
 export const countRespuestasByListaId = async (formularioId) => {
     return await RespuestaListaModel.countDocuments({
         $or: [{ formularioId }, { listaTemplateId: formularioId }]
     });
+};
+
+export const countAllRespuestas = async () => {
+    return await RespuestaListaModel.countDocuments();
+};
+
+export const deleteRespuestaById = async (id) => {
+    return await RespuestaListaModel.findByIdAndDelete(id);
 };

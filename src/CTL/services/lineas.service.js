@@ -140,6 +140,7 @@ export const createLinea = async (data) => {
       forwarders,
       fincasDefault,
       metaMinimaDefecto: Number(metaMinimaDefecto) > 0 ? Number(metaMinimaDefecto) : 5000,
+      horasProgramadasDefecto: Number(data.horasProgramadasDefecto) >= 0 ? Number(data.horasProgramadasDefecto) : 0,
       activo: data.activo !== false,
     });
 
@@ -256,6 +257,7 @@ export const updateLinea = async (id, data) => {
       forwarders,
       ...(data.fincasDefault && { fincasDefault: data.fincasDefault }),
       ...(data.metaMinimaDefecto !== undefined && { metaMinimaDefecto: Number(data.metaMinimaDefecto) || 5000 }),
+      ...(data.horasProgramadasDefecto !== undefined && { horasProgramadasDefecto: Number(data.horasProgramadasDefecto) >= 0 ? Number(data.horasProgramadasDefecto) : 0 }),
       ...(data.activo !== undefined && { activo: Boolean(data.activo) }),
     };
 

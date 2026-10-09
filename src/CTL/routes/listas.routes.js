@@ -9,6 +9,8 @@ import {
   deleteLista,
   responderLista,
   getRespuestasByLista,
+  getAllRespuestas,
+  deleteRespuesta,
   getListasByTipoEquipo,
   getListasByEquipoId,
   seedFormulariosMovilController,
@@ -21,6 +23,8 @@ const routerListas = Router();
 
 routerListas.get("/", checkPermission("listas", "read"), getAllListas);
 routerListas.post("/seed-movil", checkPermission("listas", "write"), seedFormulariosMovilController);
+routerListas.get("/respuestas-todas", checkPermission("listas", "read"), getAllRespuestas);
+routerListas.delete("/respuestas/:id", checkPermission("listas", "delete"), deleteRespuesta);
 routerListas.get("/por-tipo/:tipoEquipo", checkPermission("listas", "read"), getListasByTipoEquipo);
 routerListas.get("/por-equipo/:equipoId", checkPermission("listas", "read"), getListasByEquipoId);
 routerListas.get("/:id", checkPermission("listas", "read"), getListaById);

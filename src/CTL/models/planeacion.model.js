@@ -40,6 +40,11 @@ const LineaConfigMesSchema = new Schema(
       min: 0,
       required: true,
     },
+    horasProgramadas: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   { _id: false }
 );

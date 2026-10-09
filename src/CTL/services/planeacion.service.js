@@ -57,6 +57,7 @@ export const upsertPlaneacion = async (data) => {
     // Validar y normalizar configuración de líneas
     const cleanLineasConfig = lineasConfig.map((item) => {
       const meta = Number(item.metaMinimaToneladas);
+      const horas = Number(item.horasProgramadas);
       return {
         lineaId: item.lineaId,
         nombreLinea: item.nombreLinea || "Línea",
@@ -65,6 +66,7 @@ export const upsertPlaneacion = async (data) => {
         forwarders: Array.isArray(item.forwarders) ? item.forwarders : [],
         fincas: Array.isArray(item.fincas) ? item.fincas : [],
         metaMinimaToneladas: !isNaN(meta) && meta > 0 ? meta : 5000,
+        horasProgramadas: !isNaN(horas) && horas >= 0 ? horas : 0,
       };
     });
 
@@ -224,6 +226,7 @@ async function calcularEjecucionPlaneacion(plan, anio, mes) {
       contratista: item.contratistaId,
       fincas: item.fincas || [],
       metaMinimaToneladas: metaMinima,
+      horasProgramadas: Number(item.horasProgramadas) || 0,
       produccionRealToneladas: produccionLineaHV,
       porcentajeCumplimiento,
       diferenciaMeta: Number((produccionLineaHV - metaMinima).toFixed(2)),
@@ -248,6 +251,7 @@ async function calcularEjecucionPlaneacion(plan, anio, mes) {
     ...planObj,
     kpis: {
       metaTotalMes,
+      horasProgramadasTotalMes: (plan.lineasConfig || []).reduce((acc, c) => acc + (Number(c.horasProgramadas) || 0), 0),
       produccionTotalMes,
       porcentajeCumplimientoMes,
       diferenciaMes: Number((produccionTotalMes - metaTotalMes).toFixed(2)),

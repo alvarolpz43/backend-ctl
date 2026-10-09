@@ -7,7 +7,10 @@ import {
     removeLista,
     saveRespuesta,
     findRespuestasByListaId,
-    countRespuestasByListaId
+    findAllRespuestas,
+    countRespuestasByListaId,
+    countAllRespuestas,
+    deleteRespuestaById
 } from "../repositories/listas.repository.js";
 import equipoRepository from "../repositories/equipo.repository.js";
 import { construirJerarquiaArbol } from "./preguntasBanco.service.js";
@@ -486,5 +489,50 @@ export const getRespuestasByListaService = async (formularioId) => {
         success: true,
         total: respuestas.length,
         data: respuestas
+    };
+};
+
+export const getAllRespuestasService = async (filters = {}) => {
+    const mongoQuery = {};
+    if (filters.formularioId) {
+        mongoQuery.$or = [{ formularioId: filters.formularioId }, { listaTemplateId: filters.formularioId }];
+    }
+    if (filters.equipoId) {
+        mongoQuery.equipoId = filters.equipoId;
+    }
+    if (filters.operadorId) {
+        mongoQuery.operadorId = filters.operadorId;
+    }
+    if (filters.tipoEquipo && filters.tipoEquipo !== "Todos") {
+        mongoQuery.tipoEquipoSnapshot = filters.tipoEquipo;
+    }
+    if (filters.fechaDesde || filters.fechaHasta) {
+        mongoQuery.fecha = {};
+        if (filters.fechaDesde) {
+            mongoQuery.fecha.$gte = new Date(filters.fechaDesde);
+        }
+        if (filters.fechaHasta) {
+            const hasta = new Date(filters.fechaHasta);
+            hasta.setHours(23, 59, 59, 999);
+            mongoQuery.fecha.$lte = hasta;
+        }
+    }
+
+    const respuestas = await findAllRespuestas(mongoQuery);
+    return {
+        success: true,
+        total: respuestas.length,
+        data: respuestas
+    };
+};
+
+export const deleteRespuestaService = async (id) => {
+    const eliminada = await deleteRespuestaById(id);
+    if (!eliminada) {
+        return { success: false, message: "Reporte de formulario no encontrado" };
+    }
+    return {
+        success: true,
+        message: "Reporte diligenciado eliminado exitosamente"
     };
 };

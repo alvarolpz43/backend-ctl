@@ -37,6 +37,11 @@ const LineaSchema = new Schema(
       default: 5000,
       min: 0,
     },
+    horasProgramadasDefecto: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     activo: {
       type: Boolean,
       default: true,

@@ -1,24 +1,34 @@
 import UserModel from "../models/user.model.js";
+import "../../CTL/models/contratistas.model.js";
 
 const getAll = async () => {
   return await UserModel.find()
     .select("-password")
     .populate("role")
+    .populate("contratistas", "_id nombre")
     .sort({ createdAt: -1 });
 };
 
 const createUser = async (user) => {
   const newUser = new UserModel(user);
   await newUser.save();
-  return await UserModel.findById(newUser._id).select("-password").populate("role");
+  return await UserModel.findById(newUser._id)
+    .select("-password")
+    .populate("role")
+    .populate("contratistas", "_id nombre");
 };
 
 const findUserByEmail = async (email) => {
-  return await UserModel.findOne({ email }).populate("role");
+  return await UserModel.findOne({ email })
+    .populate("role")
+    .populate("contratistas", "_id nombre");
 };
 
 const findUserById = async (id) => {
-  return await UserModel.findById(id).select("-password").populate("role");
+  return await UserModel.findById(id)
+    .select("-password")
+    .populate("role")
+    .populate("contratistas", "_id nombre");
 };
 
 const updateUserRole = async (userId, roleId) => {
@@ -28,7 +38,8 @@ const updateUserRole = async (userId, roleId) => {
     { new: true }
   )
     .select("-password")
-    .populate("role");
+    .populate("role")
+    .populate("contratistas", "_id nombre");
 };
 
 const updateUser = async (userId, updateData) => {
@@ -38,7 +49,8 @@ const updateUser = async (userId, updateData) => {
     { new: true }
   )
     .select("-password")
-    .populate("role");
+    .populate("role")
+    .populate("contratistas", "_id nombre");
 };
 
 const findUserByEmailExcludeId = async (email, excludeUserId) => {

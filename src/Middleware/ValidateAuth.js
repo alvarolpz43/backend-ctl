@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import UserModel from "../Auth/models/user.model.js";
+import "../CTL/models/contratistas.model.js";
 
 export const validateToken = (token) => {
   try {
@@ -53,7 +54,8 @@ export const authMiddleware = async (req, res, next) => {
 
     const user = await UserModel.findById(validation.userId)
       .select("-password")
-      .populate("role");
+      .populate("role")
+      .populate("contratistas", "_id nombre");
 
     if (!user) {
       return res.status(401).json({

@@ -8,6 +8,8 @@ import {
     deleteListaService,
     registrarRespuestaService,
     getRespuestasByListaService,
+    getAllRespuestasService,
+    deleteRespuestaService,
     getListasByTipoEquipoService,
     getListasByEquipoIdService
 } from "../services/listas.service.js";
@@ -145,6 +147,35 @@ export const getRespuestasByLista = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error al obtener respuestas de la lista",
+            error: process.env.NODE_ENV === "development" ? error.message : undefined
+        });
+    }
+};
+
+export const getAllRespuestas = async (req, res) => {
+    try {
+        const response = await getAllRespuestasService(req.query);
+        return res.status(200).json(response);
+    } catch (error) {
+        console.error("Error en getAllRespuestas:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error al obtener respuestas de formularios",
+            error: process.env.NODE_ENV === "development" ? error.message : undefined
+        });
+    }
+};
+
+export const deleteRespuesta = async (req, res) => {
+    try {
+        const response = await deleteRespuestaService(req.params.id);
+        const statusCode = response.success ? 200 : 404;
+        return res.status(statusCode).json(response);
+    } catch (error) {
+        console.error("Error en deleteRespuesta:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error al eliminar respuesta",
             error: process.env.NODE_ENV === "development" ? error.message : undefined
         });
     }

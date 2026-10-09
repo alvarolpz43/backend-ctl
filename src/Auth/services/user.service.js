@@ -10,12 +10,14 @@ const formatUserResponse = (user) => {
   const { password, ...safeUser } = userObj;
   return {
     ...safeUser,
+    todosLosContratistas: safeUser.todosLosContratistas !== false,
+    contratistas: Array.isArray(safeUser.contratistas) ? safeUser.contratistas : [],
     permisos: safeUser.role?.permisos || {},
   };
 };
 
 const insertUser = async (user) => {
-  const { name, email, password, roleId } = user;
+  const { name, email, password, roleId, todosLosContratistas, contratistas } = user;
   const emailExist = await UserRepository.findUserByEmail(email);
 
   if (emailExist) {
@@ -44,12 +46,17 @@ const insertUser = async (user) => {
     }
   }
 
+  const isGeneral = todosLosContratistas !== false;
+  const cleanContratistas = !isGeneral && Array.isArray(contratistas) ? contratistas : [];
+
   const passwordHashed = await hash(password, 10);
   const newUserPayload = {
     name,
     email,
     password: passwordHashed,
     role: assignedRole ? assignedRole._id : undefined,
+    todosLosContratistas: isGeneral,
+    contratistas: cleanContratistas,
   };
 
   const userRegistered = await UserRepository.createUser(newUserPayload);
@@ -207,6 +214,18 @@ const updateUserService = async (userId, updatePayload) => {
       return { success: false, message: "El rol seleccionado no existe", status: 404 };
     }
     updates.role = role._id;
+  }
+
+  if (updatePayload.todosLosContratistas !== undefined) {
+    const isGeneral = updatePayload.todosLosContratistas !== false;
+    updates.todosLosContratistas = isGeneral;
+    if (isGeneral) {
+      updates.contratistas = [];
+    } else if (Array.isArray(updatePayload.contratistas)) {
+      updates.contratistas = updatePayload.contratistas;
+    }
+  } else if (updatePayload.contratistas !== undefined) {
+    updates.contratistas = Array.isArray(updatePayload.contratistas) ? updatePayload.contratistas : [];
   }
 
   const updated = await UserRepository.updateUser(userId, updates);
