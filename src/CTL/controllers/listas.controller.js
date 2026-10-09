@@ -11,7 +11,8 @@ import {
     getAllRespuestasService,
     deleteRespuestaService,
     getListasByTipoEquipoService,
-    getListasByEquipoIdService
+    getListasByEquipoIdService,
+    getSincronizacionEmpresaService
 } from "../services/listas.service.js";
 
 export const getAllListas = async (req, res) => {
@@ -224,6 +225,22 @@ export const seedFormulariosMovilController = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Error al sincronizar plantillas móviles",
+            error: process.env.NODE_ENV === "development" ? error.message : undefined
+        });
+    }
+};
+
+export const getSincronizacionEmpresa = async (req, res) => {
+    try {
+        const requestedContratistaId = req.query.contratistaId || req.query.empresaId || null;
+        const response = await getSincronizacionEmpresaService(req.user, requestedContratistaId);
+        const statusCode = response.success ? 200 : (response.status || 400);
+        return res.status(statusCode).json(response);
+    } catch (error) {
+        console.error("Error en getSincronizacionEmpresa:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error al sincronizar paquete de datos de la empresa",
             error: process.env.NODE_ENV === "development" ? error.message : undefined
         });
     }

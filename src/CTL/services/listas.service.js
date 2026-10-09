@@ -16,6 +16,20 @@ import {
 import equipoRepository from "../repositories/equipo.repository.js";
 import { construirJerarquiaArbol } from "./preguntasBanco.service.js";
 
+// Modelos para sincronización por empresa
+import ContratistaModel from "../models/contratistas.model.js";
+import EquipoModel from "../models/equipos.model.js";
+import LineaModel from "../models/lineas.model.js";
+import FincaModel from "../models/fincas.model.js";
+import NucleoModel from "../models/nucleos.model.js";
+import ZonaModel from "../models/zonas.model.js";
+import OperadorModel from "../models/operador.model.js";
+import TurnoModel from "../models/turnos.model.js";
+import EspecieModel from "../models/especies.model.js";
+import PreguntasBancoModel from "../models/preguntasBanco.model.js";
+import UserModel from "../../Auth/models/user.model.js";
+import ListaTemplateModel from "../models/listas.model.js";
+
 const normalizarOpciones = (opciones) => {
     if (!Array.isArray(opciones)) return [];
     return opciones.map(opt => {
@@ -575,3 +589,237 @@ export const deleteRespuestaService = async (id) => {
         message: "Reporte diligenciado eliminado exitosamente"
     };
 };
+
+/**
+ * Paquete atómico de sincronización móvil/cliente basado en la empresa del usuario.
+ * Retorna en una sola petición todo lo necesario para operar y diligenciar formularios en campo.
+ */
+export const getSincronizacionEmpresaService = async (currentUser, requestedContratistaId) => {
+    // 1. Determinar el usuario y sus contratistas autorizados
+    let userDoc = null;
+    if (currentUser?._id) {
+        userDoc = await UserModel.findById(currentUser._id).populate("contratistas", "_id nombre estado");
+    }
+
+    const todosLosContratistas = currentUser?.todosLosContratistas !== undefined
+        ? currentUser.todosLosContratistas
+        : (userDoc?.todosLosContratistas ?? true);
+
+    const userContratistas = (currentUser?.contratistas && currentUser.contratistas.length > 0)
+        ? currentUser.contratistas
+        : (userDoc?.contratistas || []);
+
+    const userContratistasIds = userContratistas.map(c => String(c._id || c));
+
+    let targetContratistaId = null;
+
+    if (requestedContratistaId) {
+        // Validar si el usuario tiene acceso a este contratista
+        if (!todosLosContratistas && !userContratistasIds.includes(String(requestedContratistaId))) {
+            return {
+                success: false,
+                status: 403,
+                message: "Acceso denegado: No tiene permisos asignados para sincronizar los datos de esta empresa/contratista"
+            };
+        }
+        targetContratistaId = requestedContratistaId;
+    } else {
+        // Seleccionar contratista por defecto
+        if (userContratistasIds.length > 0) {
+            targetContratistaId = userContratistasIds[0];
+        } else {
+            // Si es admin sin contratistas fijos, tomar el primer contratista activo
+            const primerContratista = await ContratistaModel.findOne({ estado: { $ne: false } });
+            targetContratistaId = primerContratista ? primerContratista._id : null;
+        }
+    }
+
+    if (!targetContratistaId) {
+        return {
+            success: false,
+            status: 404,
+            message: "No se encontró ninguna empresa o contratista configurada para sincronizar"
+        };
+    }
+
+    // 2. Obtener documento de la contratista seleccionada
+    const empresaDoc = await ContratistaModel.findById(targetContratistaId);
+    if (!empresaDoc) {
+        return {
+            success: false,
+            status: 404,
+            message: "La empresa/contratista solicitada no existe en el sistema"
+        };
+    }
+
+    // 3. Consultas en paralelo para optimizar tiempo de respuesta
+    const [
+        formulariosRaw,
+        lineasRaw,
+        equiposRaw,
+        turnosRaw,
+        especiesRaw,
+        todasFincasRaw,
+        preguntasBancoRaw
+    ] = await Promise.all([
+        // Plantillas activas
+        ListaTemplateModel.find({ activo: true }),
+
+        // Líneas de producción de la empresa con maquinaria y frentes
+        LineaModel.find({ contratistaId: empresaDoc._id, activo: true })
+            .populate("harvesters", "nombreEquipo serieEquipo tipoEquipo contratistaId estado")
+            .populate("forwarders", "nombreEquipo serieEquipo tipoEquipo contratistaId estado")
+            .populate({
+                path: "fincasDefault",
+                populate: {
+                    path: "nucleoId",
+                    populate: { path: "zonaId" }
+                }
+            }),
+
+        // Maquinaria de la empresa
+        EquipoModel.find({ contratistaId: empresaDoc._id, estado: { $ne: false } }),
+
+        // Turnos asignados a la empresa o generales
+        TurnoModel.find({
+            $or: [
+                { contratistaId: empresaDoc._id },
+                { contratistaId: null }
+            ]
+        }),
+
+        // Especies forestales globales
+        EspecieModel.find(),
+
+        // Catálogo de fincas enriquecido con núcleo y zona
+        FincaModel.find().populate({
+            path: "nucleoId",
+            populate: { path: "zonaId" }
+        }),
+
+        // Banco de preguntas para jerarquía de componentes
+        PreguntasBancoModel.find({ jerarquia: { $ne: null } })
+    ]);
+
+    // 4. Operadores asignados a los equipos de esta empresa
+    const equipoIds = equiposRaw.map(e => e._id);
+    const operadoresRaw = await OperadorModel.find({
+        equipoId: { $in: equipoIds }
+    }).populate("equipoId", "nombreEquipo serieEquipo tipoEquipo");
+
+    // 5. Estructurar árbol de componentes para fallas mecánicas
+    let jerarquiaComponentes = [];
+    if (preguntasBancoRaw.length > 0) {
+        const found = preguntasBancoRaw.find(p => p.jerarquia && p.jerarquia.length > 0);
+        if (found) {
+            jerarquiaComponentes = found.jerarquia;
+        }
+    }
+
+    // 6. Normalizar y estructurar fincas, núcleos y zonas
+    const fincasDeLineasIds = new Set();
+    lineasRaw.forEach(l => {
+        if (Array.isArray(l.fincasDefault)) {
+            l.fincasDefault.forEach(f => {
+                if (f?._id) fincasDeLineasIds.add(String(f._id));
+            });
+        }
+    });
+
+    const nucleosMap = new Map();
+    const zonasMap = new Map();
+
+    const fincasFormateadas = todasFincasRaw.map(f => {
+        const n = f.nucleoId;
+        const z = n?.zonaId;
+
+        if (n && n._id) {
+            if (!nucleosMap.has(String(n._id))) {
+                nucleosMap.set(String(n._id), {
+                    _id: n._id,
+                    nombreNucleo: n.nombreNucleo,
+                    codeNucleo: n.codeNucleo,
+                    zonaId: z?._id || n.zonaId
+                });
+            }
+        }
+
+        if (z && z._id) {
+            if (!zonasMap.has(String(z._id))) {
+                zonasMap.set(String(z._id), {
+                    _id: z._id,
+                    nombreZona: z.nombreZona
+                });
+            }
+        }
+
+        return {
+            _id: f._id,
+            nombreFinca: f.nombreFinca,
+            codeFinca: f.codeFinca,
+            nucleoId: n?._id || null,
+            nombreNucleo: n?.nombreNucleo || "",
+            zonaId: z?._id || null,
+            nombreZona: z?.nombreZona || "",
+            asignadaALinea: fincasDeLineasIds.has(String(f._id))
+        };
+    });
+
+    const nucleosFormateados = Array.from(nucleosMap.values());
+    const zonasFormateadas = Array.from(zonasMap.values());
+
+    // 7. Normalizar formularios
+    const formulariosFormateados = formulariosRaw.map(normalizarFormulario);
+
+    // 8. Lista de motivos predefinidos para registro de paradas
+    const motivosParadas = [
+        "Falla mecánica",
+        "En reparación",
+        "Esperando reparación",
+        "Mantenimiento menor",
+        "Cambio de cadena",
+        "Espera de transporte / camión",
+        "Condición climática / lluvia",
+        "Atasco de fuste",
+        "Tanqueo / combustible",
+        "Alimentación / refrigerio",
+        "Otro motivo"
+    ];
+
+    // 9. Armar respuesta consolidada
+    const empresasDisponibles = todosLosContratistas
+        ? await ContratistaModel.find({ estado: { $ne: false } }, "_id nombre")
+        : userContratistas;
+
+    return {
+        success: true,
+        data: {
+            empresa: {
+                _id: empresaDoc._id,
+                nombre: empresaDoc.nombre,
+                estado: empresaDoc.estado
+            },
+            empresasDisponibles,
+            formularios: formulariosFormateados,
+            lineas: lineasRaw,
+            equipos: equiposRaw,
+            operadores: operadoresRaw,
+            turnos: turnosRaw,
+            fincas: fincasFormateadas,
+            nucleos: nucleosFormateados,
+            zonas: zonasFormateadas,
+            especies: especiesRaw,
+            jerarquiaComponentes,
+            motivosParadas,
+            metadata: {
+                timestamp: new Date().toISOString(),
+                serverVersion: "1.1.2",
+                totalEquipos: equiposRaw.length,
+                totalLineas: lineasRaw.length,
+                totalOperadores: operadoresRaw.length,
+                totalFormularios: formulariosFormateados.length
+            }
+        }
+    };
+};
+

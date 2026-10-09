@@ -71,6 +71,8 @@ export const authMiddleware = async (req, res, next) => {
       email: user.email,
       role: user.role,
       permisos: user.role?.permisos || {},
+      todosLosContratistas: user.todosLosContratistas ?? true,
+      contratistas: user.contratistas || [],
     };
 
     return next();
