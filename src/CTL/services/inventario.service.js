@@ -13,10 +13,8 @@ const SISTEMAS_PREDEFINIDOS = [
 ];
 
 const TIPOS_FIBRA_PREDEFINIDOS = [
-  "Fibra Larga CON CRT",
-  "Fibra Corta CON CRT",
-  "Fibra Larga SIN CRT",
-  "Biomasa Fibra Larga",
+  "Fibra Larga",
+  "Fibra Corta",
 ];
 
 /**
