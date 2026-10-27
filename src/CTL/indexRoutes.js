@@ -13,6 +13,7 @@ import ListasRoutes from "./routes/listas.routes.js";
 import PreguntasBancoRoutes from "./routes/preguntasBanco.routes.js";
 import LineasRoutes from "./routes/lineas.routes.js";
 import PlaneacionRoutes from "./routes/planeacion.routes.js";
+import InventarioRoutes from "./routes/inventario.routes.js";
 
 const routerCTL = Router();
 
@@ -30,5 +31,6 @@ routerCTL.use("/listas", ListasRoutes);
 routerCTL.use("/preguntas-banco", PreguntasBancoRoutes);
 routerCTL.use("/lineas", LineasRoutes);
 routerCTL.use("/planeacion", PlaneacionRoutes);
+routerCTL.use("/inventario", InventarioRoutes);
 
 export default routerCTL;

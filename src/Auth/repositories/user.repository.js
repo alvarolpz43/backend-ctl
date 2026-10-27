@@ -1,11 +1,13 @@
 import UserModel from "../models/user.model.js";
 import "../../CTL/models/contratistas.model.js";
+import "../../CTL/models/equipos.model.js";
 
 const getAll = async () => {
   return await UserModel.find()
     .select("-password")
     .populate("role")
     .populate("contratistas", "_id nombre")
+    .populate("equipos", "_id nombreEquipo serieEquipo tipoEquipo contratistaId")
     .sort({ createdAt: -1 });
 };
 
@@ -15,20 +17,23 @@ const createUser = async (user) => {
   return await UserModel.findById(newUser._id)
     .select("-password")
     .populate("role")
-    .populate("contratistas", "_id nombre");
+    .populate("contratistas", "_id nombre")
+    .populate("equipos", "_id nombreEquipo serieEquipo tipoEquipo contratistaId");
 };
 
 const findUserByEmail = async (email) => {
   return await UserModel.findOne({ email })
     .populate("role")
-    .populate("contratistas", "_id nombre");
+    .populate("contratistas", "_id nombre")
+    .populate("equipos", "_id nombreEquipo serieEquipo tipoEquipo contratistaId");
 };
 
 const findUserById = async (id) => {
   return await UserModel.findById(id)
     .select("-password")
     .populate("role")
-    .populate("contratistas", "_id nombre");
+    .populate("contratistas", "_id nombre")
+    .populate("equipos", "_id nombreEquipo serieEquipo tipoEquipo contratistaId");
 };
 
 const updateUserRole = async (userId, roleId) => {
@@ -39,7 +44,8 @@ const updateUserRole = async (userId, roleId) => {
   )
     .select("-password")
     .populate("role")
-    .populate("contratistas", "_id nombre");
+    .populate("contratistas", "_id nombre")
+    .populate("equipos", "_id nombreEquipo serieEquipo tipoEquipo contratistaId");
 };
 
 const updateUser = async (userId, updateData) => {
@@ -50,7 +56,8 @@ const updateUser = async (userId, updateData) => {
   )
     .select("-password")
     .populate("role")
-    .populate("contratistas", "_id nombre");
+    .populate("contratistas", "_id nombre")
+    .populate("equipos", "_id nombreEquipo serieEquipo tipoEquipo contratistaId");
 };
 
 const findUserByEmailExcludeId = async (email, excludeUserId) => {

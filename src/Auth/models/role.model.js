@@ -37,6 +37,7 @@ const RoleSchema = new Schema(
       roles: { type: ModuloPermisoSchema, default: () => ({ read: false, write: false, update: false, delete: false }) },
       usuarios: { type: ModuloPermisoSchema, default: () => ({ read: false, write: false, update: false, delete: false }) },
       planeacion: { type: ModuloPermisoSchema, default: () => ({ read: false, write: false, update: false, delete: false }) },
+      inventario: { type: ModuloPermisoSchema, default: () => ({ read: false, write: false, update: false, delete: false }) },
     },
   },
   {

@@ -27,6 +27,14 @@ const UsuarioSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "contratistas"
     }],
+    todosLosEquipos: {
+        type: Boolean,
+        default: true
+    },
+    equipos: [{
+        type: Schema.Types.ObjectId,
+        ref: "equipos"
+    }],
 },
     {
         timestamps: true

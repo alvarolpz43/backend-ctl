@@ -13,7 +13,9 @@ const registerUserSchema = z.object({
         .min(4, { message: "password must be at least 4 characters" }),
     roleId: z.string().optional(),
     todosLosContratistas: z.boolean().optional(),
-    contratistas: z.array(z.string()).optional()
+    contratistas: z.array(z.string()).optional(),
+    todosLosEquipos: z.boolean().optional(),
+    equipos: z.array(z.string()).optional()
 });
 
 const loginSchema = z.object({

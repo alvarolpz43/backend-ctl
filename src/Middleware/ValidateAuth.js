@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import UserModel from "../Auth/models/user.model.js";
 import "../CTL/models/contratistas.model.js";
+import "../CTL/models/equipos.model.js";
 
 export const validateToken = (token) => {
   try {
@@ -55,7 +56,8 @@ export const authMiddleware = async (req, res, next) => {
     const user = await UserModel.findById(validation.userId)
       .select("-password")
       .populate("role")
-      .populate("contratistas", "_id nombre");
+      .populate("contratistas", "_id nombre")
+      .populate("equipos", "_id nombreEquipo serieEquipo tipoEquipo contratistaId");
 
     if (!user) {
       return res.status(401).json({
@@ -73,6 +75,8 @@ export const authMiddleware = async (req, res, next) => {
       permisos: user.role?.permisos || {},
       todosLosContratistas: user.todosLosContratistas ?? true,
       contratistas: user.contratistas || [],
+      todosLosEquipos: user.todosLosEquipos ?? true,
+      equipos: user.equipos || [],
     };
 
     return next();

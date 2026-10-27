@@ -14,6 +14,7 @@ const MODULES = [
   "roles",
   "usuarios",
   "planeacion",
+  "inventario",
 ];
 
 const createFullPermissions = () => {
@@ -39,7 +40,7 @@ const createSupervisorPermissions = () => {
 const createOperadorPermissions = () => {
   const p = {};
   for (const mod of MODULES) {
-    if (mod === "listas") {
+    if (mod === "listas" || mod === "inventario") {
       p[mod] = { read: true, write: true, update: false, delete: false };
     } else if (mod === "turnos" || mod === "equipos") {
       p[mod] = { read: true, write: false, update: false, delete: false };

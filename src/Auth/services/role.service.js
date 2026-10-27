@@ -11,6 +11,7 @@ const DEFAULT_MODULES = [
   "roles",
   "usuarios",
   "planeacion",
+  "inventario",
 ];
 
 const normalizePermissions = (permisos = {}) => {

@@ -12,12 +12,14 @@ const formatUserResponse = (user) => {
     ...safeUser,
     todosLosContratistas: safeUser.todosLosContratistas !== false,
     contratistas: Array.isArray(safeUser.contratistas) ? safeUser.contratistas : [],
+    todosLosEquipos: safeUser.todosLosEquipos !== false,
+    equipos: Array.isArray(safeUser.equipos) ? safeUser.equipos : [],
     permisos: safeUser.role?.permisos || {},
   };
 };
 
 const insertUser = async (user) => {
-  const { name, email, password, roleId, todosLosContratistas, contratistas } = user;
+  const { name, email, password, roleId, todosLosContratistas, contratistas, todosLosEquipos, equipos } = user;
   const emailExist = await UserRepository.findUserByEmail(email);
 
   if (emailExist) {
@@ -46,8 +48,11 @@ const insertUser = async (user) => {
     }
   }
 
-  const isGeneral = todosLosContratistas !== false;
-  const cleanContratistas = !isGeneral && Array.isArray(contratistas) ? contratistas : [];
+  const isGeneralContratistas = todosLosContratistas !== false;
+  const cleanContratistas = !isGeneralContratistas && Array.isArray(contratistas) ? contratistas : [];
+
+  const isGeneralEquipos = todosLosEquipos !== false;
+  const cleanEquipos = !isGeneralEquipos && Array.isArray(equipos) ? equipos : [];
 
   const passwordHashed = await hash(password, 10);
   const newUserPayload = {
@@ -55,8 +60,10 @@ const insertUser = async (user) => {
     email,
     password: passwordHashed,
     role: assignedRole ? assignedRole._id : undefined,
-    todosLosContratistas: isGeneral,
+    todosLosContratistas: isGeneralContratistas,
     contratistas: cleanContratistas,
+    todosLosEquipos: isGeneralEquipos,
+    equipos: cleanEquipos,
   };
 
   const userRegistered = await UserRepository.createUser(newUserPayload);
@@ -226,6 +233,18 @@ const updateUserService = async (userId, updatePayload) => {
     }
   } else if (updatePayload.contratistas !== undefined) {
     updates.contratistas = Array.isArray(updatePayload.contratistas) ? updatePayload.contratistas : [];
+  }
+
+  if (updatePayload.todosLosEquipos !== undefined) {
+    const isGeneralEquipos = updatePayload.todosLosEquipos !== false;
+    updates.todosLosEquipos = isGeneralEquipos;
+    if (isGeneralEquipos) {
+      updates.equipos = [];
+    } else if (Array.isArray(updatePayload.equipos)) {
+      updates.equipos = updatePayload.equipos;
+    }
+  } else if (updatePayload.equipos !== undefined) {
+    updates.equipos = Array.isArray(updatePayload.equipos) ? updatePayload.equipos : [];
   }
 
   const updated = await UserRepository.updateUser(userId, updates);
