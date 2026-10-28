@@ -9,7 +9,7 @@ const insertMany = async (records) => {
   return await InventarioModel.insertMany(records);
 };
 
-const findAll = async (query = {}, { page = 1, limit = 50, sort = { fecha: -1, createdAt: -1 } } = {}) => {
+const findAll = async (query = {}, { page = 1, limit = 20, sort = { fecha: -1, createdAt: -1 } } = {}) => {
   const skip = (page - 1) * limit;
 
   const [items, total] = await Promise.all([

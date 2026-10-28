@@ -167,7 +167,7 @@ export const listarInventarios = async (query = {}, user) => {
   }
 
   const page = Math.max(1, parseInt(query.page, 10) || 1);
-  const limit = Math.max(1, Math.min(200, parseInt(query.limit, 10) || 50));
+  const limit = Math.max(1, Math.min(500, parseInt(query.limit, 10) || 20));
 
   const [paginatedResult, totales] = await Promise.all([
     InventarioRepository.findAll(filter, { page, limit }),
